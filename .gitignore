@@ -1,0 +1,31 @@
+# Secrets
+.env
+
+# Data & generated artifacts
+data/
+test_report.md
+tests/fixtures/*.wav
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+
+# Node
+node_modules/
+
+# Editor / OS
+.idea/
+.vscode/
+.DS_Store
+*.swp
+*~
+
+# Stray
+.gitignore.save
+
+# Local Claude Code settings (machine-specific)
+.claude/

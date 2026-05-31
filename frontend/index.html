@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sarvam Video Tutor — Test Bench</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Video Tutor <span class="tag">test bench</span></h1>
+    <p class="muted">Manual surface over the grounded-Q&amp;A backend. P0 spine + P1-A comprehension layer + P1-B voice loop &amp; adaptive viva.</p>
+  </header>
+
+  <main>
+    <!-- ============ Lecture loader ============ -->
+    <section class="card" id="lecture-card">
+      <h2>1 · Lecture</h2>
+      <div class="row">
+        <input id="url" type="text" placeholder="https://www.youtube.com/watch?v=..." />
+        <button id="ingest-btn">Load lecture</button>
+      </div>
+      <p id="ingest-status" class="status"></p>
+      <div id="lecture-meta" class="meta hidden"></div>
+      <div id="player-wrapper" class="hidden">
+        <div id="yt-player"></div>
+      </div>
+    </section>
+
+    <div class="two-col">
+      <!-- ============ Ask panel (main test surface) ============ -->
+      <section class="card hidden" id="ask-card">
+        <h2>2 · Ask</h2>
+        <div class="row">
+          <input id="question" type="text" placeholder="What is gradient descent?" />
+          <button id="mic-btn" title="Hold-to-talk: click to record, click to send" aria-label="Voice input">🎤</button>
+          <button id="ask-btn">Ask</button>
+        </div>
+        <p id="voice-status" class="status small"></p>
+        <div class="controls">
+          <label class="control-label">Language</label>
+          <select id="language">
+            <option value="en">English</option>
+            <option value="hi">हिन्दी (Hindi)</option>
+            <option value="ta">தமிழ் (Tamil)</option>
+          </select>
+          <label class="control-label">Register</label>
+          <div class="radio-group">
+            <label><input type="radio" name="register" value="more_vernacular"> more vernacular</label>
+            <label><input type="radio" name="register" value="balanced" checked> balanced</label>
+            <label><input type="radio" name="register" value="more_english"> more English</label>
+          </div>
+        </div>
+        <div id="ask-status" class="status"></div>
+        <div id="answers" class="answers"></div>
+      </section>
+
+      <!-- ============ Right-rail: concepts + mastery ============ -->
+      <div class="rail">
+        <section class="card hidden" id="concepts-card">
+          <h2>Concept map</h2>
+          <p class="muted small">Click a concept to jump the player to its first timestamp.</p>
+          <div id="concept-list" class="concept-list"></div>
+        </section>
+
+        <section class="card hidden" id="mastery-card">
+          <div class="card-head">
+            <h2>Mastery <span id="mastery-count" class="muted small"></span></h2>
+            <button id="start-viva-btn" class="ghost small" title="Adaptive spoken quiz over low-mastery concepts">Start viva</button>
+          </div>
+          <p class="muted small">
+            Session:
+            <code id="session-id-display">—</code>
+            <button id="copy-session-btn" class="ghost small" title="Copy session id">copy</button>
+            <button id="new-session-btn" class="ghost small">new session</button>
+          </p>
+          <p class="muted small">
+            <span class="dot unseen"></span> unseen ·
+            <span class="dot engaged"></span> engaged ·
+            <span class="dot shaky"></span> shaky ·
+            <span class="dot demonstrated"></span> demonstrated
+          </p>
+          <div id="mastery-list" class="mastery-list"></div>
+        </section>
+      </div>
+    </div>
+
+    <!-- ============ Adaptive viva ============ -->
+    <section class="card hidden" id="viva-card">
+      <div class="card-head">
+        <h2>3 · Viva <span id="viva-progress" class="muted small"></span></h2>
+        <button id="viva-close-btn" class="ghost small">close</button>
+      </div>
+      <div class="controls">
+        <label class="control-label">Mode</label>
+        <div class="radio-group">
+          <label><input type="radio" name="viva-mode" value="quiz" checked> quiz</label>
+          <label><input type="radio" name="viva-mode" value="teach_back"> teach-back</label>
+        </div>
+      </div>
+      <div id="viva-body">
+        <div id="viva-concept" class="muted small"></div>
+        <p id="viva-question" class="viva-question"></p>
+        <audio id="viva-audio" controls class="hidden"></audio>
+        <div class="row">
+          <button id="viva-record-btn">🎤 Record answer</button>
+          <span id="viva-rec-status" class="status small"></span>
+        </div>
+        <div id="viva-result" class="viva-result"></div>
+      </div>
+      <div id="viva-summary" class="viva-summary hidden"></div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

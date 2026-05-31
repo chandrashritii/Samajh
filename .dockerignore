@@ -1,0 +1,15 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+.git/
+.gitignore.save
+data/
+node_modules/
+tests/fixtures/*.wav
+test_report.md
+.DS_Store
+.env
+.pytest_cache/
+.idea/
+.vscode/
