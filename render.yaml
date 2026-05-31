@@ -1,0 +1,22 @@
+# Render Blueprint — one-click deploy of Samajh (FastAPI + static frontend).
+# Docker runtime so ffmpeg + the warmed MiniLM model are reproducible.
+#
+# Deploy:
+#   1. Push this repo to GitHub (done).
+#   2. render.com → New → Blueprint → pick this repo.
+#   3. Set SARVAM_API_KEY (and optionally SARVAM_API_KEY_FALLBACK) when prompted.
+#   4. Deploy. The curated chip lectures are bundled in the image (seed/), so they
+#      load instantly with no Sarvam cost on cold start.
+services:
+  - type: web
+    name: samajh
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: SARVAM_API_KEY
+        sync: false          # set in the Render dashboard — never committed
+      - key: SARVAM_API_KEY_FALLBACK
+        sync: false
+      - key: PREWARM_CHIPS
+        value: "0"           # seed/ already provides the chips; skip live re-ingest

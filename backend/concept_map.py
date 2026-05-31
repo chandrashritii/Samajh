@@ -314,6 +314,20 @@ def _merge_concepts(groups: list[list[dict]]) -> list[dict]:
     return out
 
 
+def _extract_windowed(chunks: list[Chunk], window: int) -> list[dict]:
+    """Map over fixed-size windows, reduce by merge+dedupe. Smaller windows keep
+    each LLM call's JSON within sarvam-m's output budget."""
+    import logging
+    log = logging.getLogger("tutor.concepts")
+    groups: list[list[dict]] = []
+    for i in range(0, len(chunks), window):
+        g = _extract_once(chunks[i:i + window])
+        log.info("window %d-%d → %d concepts", i, i + min(window, len(chunks) - i), len(g))
+        if g:
+            groups.append(g)
+    return _merge_concepts(groups) if groups else []
+
+
 def extract_and_persist(video_id: str, chunks: list[Chunk]) -> list[dict]:
     """Extract a concept map and persist it. Single shot for short lectures;
     map-reduce over windows for long ones (so sarvam-m emits JSON within its
@@ -328,16 +342,18 @@ def extract_and_persist(video_id: str, chunks: list[Chunk]) -> list[dict]:
 
     if len(chunks) <= _WINDOW_CHUNKS:
         concepts = _extract_once(chunks)
+        # A single shot can under-produce when sarvam-m spends its whole output
+        # budget on an unclosed <think> block and never emits the JSON (seen on
+        # some short lectures). Retrying with smaller windows reliably recovers,
+        # because each window leaves room for JSON after the reasoning.
+        if len(concepts) < config.CONCEPT_MIN and len(chunks) >= 4:
+            windowed = _extract_windowed(chunks, max(4, len(chunks) // 2 + 1))
+            if len(windowed) > len(concepts):
+                log.info("single-shot gave %d; windowing recovered %d",
+                         len(concepts), len(windowed))
+                concepts = windowed
     else:
-        # Map: extract per window. Reduce: merge + dedupe.
-        groups: list[list[dict]] = []
-        for i in range(0, len(chunks), _WINDOW_CHUNKS):
-            window = chunks[i:i + _WINDOW_CHUNKS]
-            g = _extract_once(window)
-            log.info("window %d-%d → %d concepts", i, i + len(window), len(g))
-            if g:
-                groups.append(g)
-        concepts = _merge_concepts(groups) if groups else []
+        concepts = _extract_windowed(chunks, _WINDOW_CHUNKS)
 
     if not concepts:
         log.error("concept extraction empty for %s — using chunk-derived fallback", video_id)

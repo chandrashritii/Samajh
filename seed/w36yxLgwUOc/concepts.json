@@ -1,0 +1,68 @@
+[
+  {
+    "id": "sun",
+    "name": "Sun",
+    "one_line_desc": "Main source of light in the Solar System",
+    "first_timestamp": 47.285,
+    "chunk_ids": [
+      1
+    ],
+    "prerequisites": []
+  },
+  {
+    "id": "earth",
+    "name": "Earth",
+    "one_line_desc": "Favorite planet due to habitability",
+    "first_timestamp": 90.027,
+    "chunk_ids": [
+      2
+    ],
+    "prerequisites": [
+      "sun"
+    ]
+  },
+  {
+    "id": "jupiter",
+    "name": "Jupiter",
+    "one_line_desc": "Largest planet in the Solar System",
+    "first_timestamp": 132.652,
+    "chunk_ids": [
+      3
+    ],
+    "prerequisites": []
+  },
+  {
+    "id": "jupiter-temperature",
+    "name": "Jupiter Temperature",
+    "one_line_desc": "Temperatures drop to -224°C",
+    "first_timestamp": 171.464,
+    "chunk_ids": [
+      4
+    ],
+    "prerequisites": [
+      "jupiter"
+    ]
+  },
+  {
+    "id": "jupiter-rotation-period",
+    "name": "Jupiter Rotation Period",
+    "one_line_desc": "Takes 84 Earth days to rotate",
+    "first_timestamp": 171.464,
+    "chunk_ids": [
+      4
+    ],
+    "prerequisites": [
+      "jupiter"
+    ]
+  },
+  {
+    "id": "dwarf-planets",
+    "name": "Dwarf Planets",
+    "one_line_desc": "5 dwarf planets exist in the Solar System",
+    "first_timestamp": 208.329,
+    "chunk_ids": [
+      5
+    ],
+    "prerequisites": []
+  }
+]

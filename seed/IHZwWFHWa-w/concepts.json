@@ -1,0 +1,172 @@
+[
+  {
+    "id": "neural-network-structure",
+    "name": "Neural Network Structure",
+    "one_line_desc": "Structure of a neural network laid out",
+    "first_timestamp": 4.18,
+    "chunk_ids": [
+      0
+    ],
+    "prerequisites": []
+  },
+  {
+    "id": "pixel-grayscale-values",
+    "name": "Pixel Grayscale Values",
+    "one_line_desc": "Pixel values between 0 and 1",
+    "first_timestamp": 40.032,
+    "chunk_ids": [
+      1
+    ],
+    "prerequisites": [
+      "neural-network-structure"
+    ]
+  },
+  {
+    "id": "training-data",
+    "name": "Training Data",
+    "one_line_desc": "Data used for training the network",
+    "first_timestamp": 116.781,
+    "chunk_ids": [
+      3
+    ],
+    "prerequisites": [
+      "neural-network-structure"
+    ]
+  },
+  {
+    "id": "neuron-bias",
+    "name": "Neuron Bias",
+    "one_line_desc": "Bias indication in neuron behavior",
+    "first_timestamp": 194.244,
+    "chunk_ids": [
+      5
+    ],
+    "prerequisites": [
+      "neural-network-structure"
+    ]
+  },
+  {
+    "id": "mathematical-formulation",
+    "name": "Mathematical Formulation",
+    "one_line_desc": "Sum of squares in network output",
+    "first_timestamp": 231.72,
+    "chunk_ids": [
+      6
+    ],
+    "prerequisites": [
+      "neural-network-structure",
+      "neuron-bias"
+    ]
+  },
+  {
+    "id": "network-complexity",
+    "name": "Network Complexity",
+    "one_line_desc": "Complexity of network operations",
+    "first_timestamp": 273.42,
+    "chunk_ids": [
+      7
+    ],
+    "prerequisites": [
+      "neural-network-structure"
+    ]
+  },
+  {
+    "id": "gradient-descent",
+    "name": "Gradient Descent",
+    "one_line_desc": "Optimization process for network weights",
+    "first_timestamp": 312.4,
+    "chunk_ids": [
+      8
+    ],
+    "prerequisites": [
+      "network-complexity",
+      "mathematical-formulation"
+    ]
+  },
+  {
+    "id": "random-input-initialization",
+    "name": "Random Input Initialization",
+    "one_line_desc": "Starting at random inputs for optimization",
+    "first_timestamp": 351.58,
+    "chunk_ids": [
+      9
+    ],
+    "prerequisites": [
+      "gradient-descent"
+    ]
+  },
+  {
+    "id": "gradient-calculation",
+    "name": "Gradient Calculation",
+    "one_line_desc": "Steepest slope indication for adjustments",
+    "first_timestamp": 470.569,
+    "chunk_ids": [
+      12
+    ],
+    "prerequisites": [
+      "gradient-descent"
+    ]
+  },
+  {
+    "id": "local-minima",
+    "name": "Local Minima",
+    "one_line_desc": "Valleys in cost function graph",
+    "first_timestamp": 630.837,
+    "chunk_ids": [
+      16
+    ],
+    "prerequisites": [
+      "gradient-descent",
+      "random-input-initialization"
+    ]
+  },
+  {
+    "id": "cost-function",
+    "name": "Cost Function",
+    "one_line_desc": "Function defined by weighted sums",
+    "first_timestamp": 747.147,
+    "chunk_ids": [
+      19
+    ],
+    "prerequisites": [
+      "mathematical-formulation"
+    ]
+  },
+  {
+    "id": "weight-adjustment",
+    "name": "Weight Adjustment",
+    "one_line_desc": "Adjusting weights via gradient descent",
+    "first_timestamp": 786.089,
+    "chunk_ids": [
+      20
+    ],
+    "prerequisites": [
+      "gradient-descent",
+      "cost-function"
+    ]
+  },
+  {
+    "id": "local-minima-problem",
+    "name": "Local Minima Problem",
+    "one_line_desc": "Local minima causing suboptimal classification",
+    "first_timestamp": 901.248,
+    "chunk_ids": [
+      23
+    ],
+    "prerequisites": [
+      "local-minima"
+    ]
+  },
+  {
+    "id": "training-data-constraints",
+    "name": "Training Data Constraints",
+    "one_line_desc": "Tightly constrained training data issues",
+    "first_timestamp": 941.42,
+    "chunk_ids": [
+      24
+    ],
+    "prerequisites": [
+      "training-data"
+    ]
+  }
+]

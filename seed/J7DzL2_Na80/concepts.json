@@ -1,0 +1,131 @@
+[
+  {
+    "id": "system-of-linear-equations",
+    "name": "System of Linear Equations",
+    "one_line_desc": "Set of equations with variables as unknowns",
+    "first_timestamp": 203.09,
+    "chunk_ids": [
+      5,
+      7,
+      9,
+      10,
+      12
+    ],
+    "prerequisites": []
+  },
+  {
+    "id": "matrix",
+    "name": "Matrix",
+    "one_line_desc": "Rectangular array of numbers arranged in rows/columns",
+    "first_timestamp": 121.6,
+    "chunk_ids": [
+      3,
+      4,
+      13,
+      15,
+      25
+    ],
+    "prerequisites": []
+  },
+  {
+    "id": "vector",
+    "name": "Vector",
+    "one_line_desc": "Ordered list of numbers representing quantities",
+    "first_timestamp": 203.09,
+    "chunk_ids": [
+      5,
+      6,
+      17,
+      20,
+      26
+    ],
+    "prerequisites": []
+  },
+  {
+    "id": "row-picture",
+    "name": "Row Picture",
+    "one_line_desc": "Geometric interpretation of equations as hyperplanes",
+    "first_timestamp": 318.29,
+    "chunk_ids": [
+      8,
+      25,
+      29
+    ],
+    "prerequisites": [
+      "system-of-linear-equations"
+    ]
+  },
+  {
+    "id": "column-picture",
+    "name": "Column Picture",
+    "one_line_desc": "Representation using linear combinations of columns",
+    "first_timestamp": 519.679,
+    "chunk_ids": [
+      13,
+      21,
+      25,
+      35
+    ],
+    "prerequisites": [
+      "matrix"
+    ]
+  },
+  {
+    "id": "linear-combination",
+    "name": "Linear Combination",
+    "one_line_desc": "Sum of scalar multiples of vectors",
+    "first_timestamp": 559.26,
+    "chunk_ids": [
+      14,
+      21,
+      44,
+      45
+    ],
+    "prerequisites": [
+      "vector"
+    ]
+  },
+  {
+    "id": "matrix-multiplication",
+    "name": "Matrix Multiplication",
+    "one_line_desc": "Fundamental operation producing linear combinations",
+    "first_timestamp": 595.42,
+    "chunk_ids": [
+      15,
+      45,
+      59
+    ],
+    "prerequisites": [
+      "matrix",
+      "linear-combination"
+    ]
+  },
+  {
+    "id": "solution-space",
+    "name": "Solution Space",
+    "one_line_desc": "Set of all solutions forming a geometric shape",
+    "first_timestamp": 356.76,
+    "chunk_ids": [
+      9,
+      23,
+      29,
+      33
+    ],
+    "prerequisites": [
+      "system-of-linear-equations"
+    ]
+  },
+  {
+    "id": "invertible-matrix",
+    "name": "Invertible Matrix",
+    "one_line_desc": "Matrix with unique solution for every equation",
+    "first_timestamp": 2027.14,
+    "chunk_ids": [
+      52,
+      53
+    ],
+    "prerequisites": [
+      "matrix"
+    ]
+  }
+]

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Samajh · समझ — ask any lecture your doubts</title>
+  <meta name="description" content="Ask any lecture your doubts — in your language, by voice, answered only from the lecture." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Spectral:wght@400;500;600;700&family=Noto+Serif+Devanagari:wght@400;500;600&family=Noto+Serif+Tamil:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/samajh/style.css" />
+</head>
+<body>
+  <!-- ============ Top bar ============ -->
+  <header class="topbar">
+    <a class="wordmark" href="/" aria-label="Samajh home">
+      <span class="wm-dev">समझ</span><span class="wm-lat">Samajh</span>
+    </a>
+    <div class="topbar-right">
+      <button id="reset-btn" class="link-btn hidden" title="Start over">start over</button>
+      <a class="link-btn subtle" href="/dev" title="Developer test bench">dev</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- ============ Hero / entry ============ -->
+    <section class="hero" id="hero">
+      <div class="hero-inner">
+        <p class="eyebrow reveal" style="--d:0">समझ · understanding, grounded</p>
+        <h1 class="hero-title reveal" style="--d:1">
+          Ask any lecture<br><em>your</em> doubts.
+        </h1>
+        <p class="hero-sub reveal" style="--d:2">
+          In your language, by voice — answered <strong>only</strong> from the lecture,
+          with the exact moment cited. If it isn't in the video, Samajh says so rather than guess.
+        </p>
+
+        <div class="loader reveal" style="--d:3">
+          <input id="url" type="text" inputmode="url"
+                 placeholder="Paste a YouTube lecture link…" autocomplete="off" />
+          <button id="open-btn">Open lecture</button>
+        </div>
+        <p id="hero-status" class="hero-status"></p>
+
+        <div class="chips reveal" style="--d:4">
+          <span class="chips-label">or try one</span>
+          <div class="chip-row" id="chip-row"><!-- chips injected --></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Learning surface ============ -->
+    <section class="surface hidden" id="surface">
+      <!-- Left: the lecture -->
+      <div class="stage">
+        <div class="player-frame">
+          <div id="yt-player"></div>
+        </div>
+        <div class="lecture-strip" id="lecture-strip"></div>
+
+        <!-- Progress (learner-facing) -->
+        <section class="panel progress-panel" id="progress-panel">
+          <div class="panel-head">
+            <h2>What you're learning</h2>
+            <button id="viva-entry-btn" class="accent-btn small">Test my understanding</button>
+          </div>
+          <div class="legend">
+            <span><i class="dot learned"></i>learned</span>
+            <span><i class="dot revisit"></i>revisit</span>
+            <span><i class="dot exploring"></i>exploring</span>
+            <span><i class="dot notyet"></i>not yet</span>
+          </div>
+          <div id="concept-track" class="concept-track"></div>
+        </section>
+      </div>
+
+      <!-- Right: ask + answers -->
+      <div class="dialogue">
+        <section class="panel ask-panel">
+          <div class="ask-lang">
+            <span class="ask-lang-label">Answer me in</span>
+            <div class="seg" id="lang-seg" role="tablist">
+              <button class="seg-opt active" data-lang="en">English</button>
+              <button class="seg-opt" data-lang="hi" lang="hi">हिन्दी</button>
+              <button class="seg-opt" data-lang="ta" lang="ta">தமிழ்</button>
+            </div>
+            <div class="blend hidden" id="blend-row">
+              <span class="blend-end" id="blend-left">more हिन्दी</span>
+              <input type="range" id="blend" min="0" max="2" step="1" value="1" />
+              <span class="blend-end">more English</span>
+            </div>
+          </div>
+
+          <div class="ask-input">
+            <button id="mic-btn" class="mic" aria-label="Ask by voice">
+              <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
+                <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Z"/>
+                <path d="M19 11a7 7 0 0 1-14 0M12 18v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </button>
+            <div class="ask-text">
+              <input id="question" type="text" placeholder="…or type a doubt and press enter" autocomplete="off" />
+            </div>
+          </div>
+          <p id="ask-hint" class="ask-hint">Tap the mic and speak your doubt — in any language.</p>
+          <div id="suggested-qs" class="suggested-qs hidden"></div>
+        </section>
+
+        <div id="thread" class="thread"></div>
+      </div>
+    </section>
+
+    <!-- ============ Viva (modal-style overlay panel) ============ -->
+    <section class="viva-overlay hidden" id="viva-overlay">
+      <div class="viva-card">
+        <div class="viva-top">
+          <div>
+            <h2 class="viva-title">Test my understanding</h2>
+            <p class="viva-meta" id="viva-meta">an adaptive spoken quiz from this lecture</p>
+          </div>
+          <button id="viva-x" class="icon-x" aria-label="Close">×</button>
+        </div>
+
+        <div class="viva-mode-row">
+          <div class="seg small" id="viva-mode">
+            <button class="seg-opt active" data-mode="quiz">Quiz me</button>
+            <button class="seg-opt" data-mode="teach_back">I'll explain</button>
+          </div>
+        </div>
+
+        <div id="viva-stage" class="viva-stage">
+          <p class="viva-lead">Pick a mode, then begin — Samajh will ask about the ideas you haven't nailed yet.</p>
+          <button id="viva-begin" class="accent-btn">Begin</button>
+        </div>
+
+        <div id="viva-summary" class="viva-summary hidden"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>Samajh · समझ</span>
+    <span class="sep">·</span>
+    <span>grounded in the lecture, never invented</span>
+    <span class="sep">·</span>
+    <span>powered by Sarvam</span>
+  </footer>
+
+  <script src="/static/samajh/app.js"></script>
+</body>
+</html>

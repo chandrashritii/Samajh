@@ -1,0 +1,74 @@
+[
+  {
+    "id": "economics-definition",
+    "name": "Economics Definition",
+    "one_line_desc": "Study of systems/societies, not individual decisions",
+    "first_timestamp": 116.36,
+    "chunk_ids": [
+      3
+    ],
+    "prerequisites": []
+  },
+  {
+    "id": "opportunity-cost",
+    "name": "Opportunity Cost",
+    "one_line_desc": "Every choice has trade-offs and hidden costs",
+    "first_timestamp": 154.7,
+    "chunk_ids": [
+      4,
+      7,
+      8,
+      9,
+      10
+    ],
+    "prerequisites": [
+      "economics-definition"
+    ]
+  },
+  {
+    "id": "trade-offs",
+    "name": "Trade-offs",
+    "one_line_desc": "Examples include military spending vs. other uses",
+    "first_timestamp": 306.33,
+    "chunk_ids": [
+      8,
+      9
+    ],
+    "prerequisites": [
+      "opportunity-cost"
+    ]
+  },
+  {
+    "id": "economic-policies",
+    "name": "Economic Policies",
+    "one_line_desc": "Government regulations and funding decisions",
+    "first_timestamp": 425.82,
+    "chunk_ids": [
+      11,
+      12
+    ],
+    "prerequisites": []
+  },
+  {
+    "id": "economic-efficiency",
+    "name": "Economic Efficiency",
+    "one_line_desc": "Minimizing costs to avoid negative outcomes",
+    "first_timestamp": 542.88,
+    "chunk_ids": [
+      14
+    ],
+    "prerequisites": [
+      "opportunity-cost"
+    ]
+  },
+  {
+    "id": "macroeconomics",
+    "name": "Macroeconomics",
+    "one_line_desc": "Large-scale economic systems study",
+    "first_timestamp": 658.53,
+    "chunk_ids": [
+      17
+    ],
+    "prerequisites": []
+  }
+]

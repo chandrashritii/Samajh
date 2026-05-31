@@ -1,0 +1,131 @@
+[
+  {
+    "id": "newtonian-gravity",
+    "name": "Newtonian Gravity",
+    "one_line_desc": "Newton's apple-inspired gravitational force concept",
+    "first_timestamp": 36.98,
+    "chunk_ids": [
+      1,
+      4,
+      12
+    ],
+    "prerequisites": []
+  },
+  {
+    "id": "scientific-method",
+    "name": "Scientific Method",
+    "one_line_desc": "Experimentation leading to story-based conclusions",
+    "first_timestamp": 74.61,
+    "chunk_ids": [
+      2
+    ],
+    "prerequisites": []
+  },
+  {
+    "id": "logarithmic-scale",
+    "name": "Logarithmic Scale",
+    "one_line_desc": "Measuring large numbers with logarithmic progression",
+    "first_timestamp": 112.05,
+    "chunk_ids": [
+      3
+    ],
+    "prerequisites": []
+  },
+  {
+    "id": "inertia",
+    "name": "Inertia",
+    "one_line_desc": "Objects maintain motion/position without external force",
+    "first_timestamp": 149.98,
+    "chunk_ids": [
+      4,
+      5,
+      21
+    ],
+    "prerequisites": []
+  },
+  {
+    "id": "price-optimization",
+    "name": "Price Optimization",
+    "one_line_desc": "Smart pricing strategies for market success",
+    "first_timestamp": 223.04,
+    "chunk_ids": [
+      6
+    ],
+    "prerequisites": []
+  },
+  {
+    "id": "straight-line-motion",
+    "name": "Straight-Line Motion",
+    "one_line_desc": "Uniform speed along straight path",
+    "first_timestamp": 258.72,
+    "chunk_ids": [
+      7,
+      8,
+      9,
+      10
+    ],
+    "prerequisites": [
+      "uniform-speed"
+    ]
+  },
+  {
+    "id": "uniform-speed",
+    "name": "Uniform Speed",
+    "one_line_desc": "Constant velocity in straight-line motion",
+    "first_timestamp": 336.989,
+    "chunk_ids": [
+      9,
+      10
+    ],
+    "prerequisites": []
+  },
+  {
+    "id": "object-properties",
+    "name": "Object Properties",
+    "one_line_desc": "Intrinsic characteristics of matter",
+    "first_timestamp": 445.49,
+    "chunk_ids": [
+      12
+    ],
+    "prerequisites": []
+  },
+  {
+    "id": "mass-vs-weight",
+    "name": "Mass vs Weight",
+    "one_line_desc": "Distinction between mass and gravitational weight",
+    "first_timestamp": 482.669,
+    "chunk_ids": [
+      13,
+      14
+    ],
+    "prerequisites": [
+      "object-properties"
+    ]
+  },
+  {
+    "id": "correction-principle",
+    "name": "Correction Principle",
+    "one_line_desc": "Adjustments in motion calculations",
+    "first_timestamp": 556.36,
+    "chunk_ids": [
+      15
+    ],
+    "prerequisites": []
+  },
+  {
+    "id": "applied-forces",
+    "name": "Applied Forces",
+    "one_line_desc": "External forces affecting motion",
+    "first_timestamp": 593.11,
+    "chunk_ids": [
+      16,
+      18,
+      22,
+      25,
+      27
+    ],
+    "prerequisites": [
+      "inertia"
+    ]
+  }
+]

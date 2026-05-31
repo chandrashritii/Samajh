@@ -1,0 +1,86 @@
+[
+  {
+    "id": "water",
+    "name": "Water",
+    "one_line_desc": "Essential for all living beings",
+    "first_timestamp": 42.0,
+    "chunk_ids": [
+      1
+    ],
+    "prerequisites": []
+  },
+  {
+    "id": "condensation",
+    "name": "Condensation",
+    "one_line_desc": "Water vapor turning to liquid in clouds",
+    "first_timestamp": 152.16,
+    "chunk_ids": [
+      4
+    ],
+    "prerequisites": [
+      "water"
+    ]
+  },
+  {
+    "id": "cloud-condensation-nuclei",
+    "name": "Cloud Condensation Nuclei",
+    "one_line_desc": "Particles water condenses around",
+    "first_timestamp": 187.86,
+    "chunk_ids": [
+      5
+    ],
+    "prerequisites": [
+      "condensation"
+    ]
+  },
+  {
+    "id": "bacteria-ccn",
+    "name": "Bacteria as CCN",
+    "one_line_desc": "Bacteria acting as cloud condensation nuclei",
+    "first_timestamp": 223.739,
+    "chunk_ids": [
+      6
+    ],
+    "prerequisites": [
+      "cloud-condensation-nuclei"
+    ]
+  },
+  {
+    "id": "raindrop-formation",
+    "name": "Raindrop Formation",
+    "one_line_desc": "Process of raindrop creation via CCN",
+    "first_timestamp": 187.86,
+    "chunk_ids": [
+      5,
+      6
+    ],
+    "prerequisites": [
+      "cloud-condensation-nuclei",
+      "bacteria-ccn"
+    ]
+  },
+  {
+    "id": "raindrop-shape",
+    "name": "Raindrop Shape Dynamics",
+    "one_line_desc": "Smallest raindrops start as spheres",
+    "first_timestamp": 257.34,
+    "chunk_ids": [
+      7
+    ],
+    "prerequisites": [
+      "raindrop-formation"
+    ]
+  },
+  {
+    "id": "raindrop-journey",
+    "name": "Journey of a Raindrop",
+    "one_line_desc": "Path from cloud to ground",
+    "first_timestamp": 294.54,
+    "chunk_ids": [
+      8
+    ],
+    "prerequisites": [
+      "raindrop-formation"
+    ]
+  }
+]

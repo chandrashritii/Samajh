@@ -395,10 +395,90 @@ def viva_summary(viva_id: str) -> VivaSummaryResponse:
     )
 
 
+# ---- Startup: restore seed + warm the curated library --------------------
+
+_SEED_DIR = Path(__file__).resolve().parent.parent / "seed"
+
+
+def _library_video_ids() -> list[str]:
+    """The demo library (frontend/samajh/library.json) is the single source of
+    truth for which lectures to make instantly available."""
+    lib_path = Path(__file__).resolve().parent.parent / "frontend" / "samajh" / "library.json"
+    try:
+        import json as _json
+        return [e["video_id"] for e in _json.loads(lib_path.read_text())]
+    except Exception:  # noqa: BLE001
+        return []
+
+
+def _restore_seed() -> None:
+    """Copy version-controlled lecture indices from seed/ into data/ when absent,
+    so the curated library is instantly available on a fresh deploy (free-tier
+    disks are ephemeral) with zero Sarvam cost and zero YouTube access."""
+    import shutil
+    if not _SEED_DIR.exists():
+        return
+    for d in _SEED_DIR.iterdir():
+        if not d.is_dir():
+            continue
+        dest = config.DATA_DIR / d.name
+        if dest.exists():
+            continue
+        try:
+            shutil.copytree(d, dest)
+            log.info("restored seed lecture %s", d.name)
+        except Exception as e:  # noqa: BLE001
+            log.warning("seed restore failed for %s: %s", d.name, e)
+
+
+def _prewarm_chips() -> None:
+    """Ensure each library lecture is indexed so cards load instantly. Seed
+    restore usually satisfies this for free; this re-ingests any still missing.
+    Best-effort — failures are logged, never block startup. On a datacenter host
+    YouTube fetches will fail; that's why seed/ is bundled."""
+    for vid in _library_video_ids():
+        try:
+            if indexing.has_cached_index(vid):
+                _, chunks, _ = indexing.load(vid)
+                _ensure_concepts(vid, chunks)
+                continue
+            vid2, segments, source = ingestion.ingest(f"https://www.youtube.com/watch?v={vid}")
+            chunks = indexing.chunk_segments(segments)
+            if not chunks:
+                continue
+            duration = float(segments[-1]["end"]) if segments else 0.0
+            indexing.build_and_persist(
+                vid2, chunks, {"title": vid2, "duration": duration, "transcript_source": source})
+            _ensure_concepts(vid2, chunks)
+            log.info("prewarmed library lecture %s", vid2)
+        except Exception as e:  # noqa: BLE001 — best-effort warmup
+            log.warning("prewarm failed for %s: %s", vid, e)
+
+
+@app.on_event("startup")
+def _startup_prewarm() -> None:
+    import os
+    import threading
+    # Seed restore is cheap (file copy) — do it synchronously so the library is
+    # ready immediately. Live re-ingest of anything missing runs off-thread.
+    _restore_seed()
+    if os.getenv("PREWARM_CHIPS", "1") == "1":
+        threading.Thread(target=_prewarm_chips, daemon=True).start()
+
+
+# ---- Static frontend: Samajh (public) at /, test bench at /dev -------------
+
 _FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
+_SAMAJH_DIR = _FRONTEND_DIR / "samajh"
 if _FRONTEND_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(_FRONTEND_DIR)), name="static")
 
     @app.get("/")
     def index() -> FileResponse:
+        # The polished learner-facing product.
+        return FileResponse(_SAMAJH_DIR / "index.html")
+
+    @app.get("/dev")
+    def dev_bench() -> FileResponse:
+        # The original test bench — raw JSON, top_sim, session ids, debug panels.
         return FileResponse(_FRONTEND_DIR / "index.html")

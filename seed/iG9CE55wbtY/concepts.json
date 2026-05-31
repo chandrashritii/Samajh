@@ -1,0 +1,106 @@
+[
+  {
+    "id": "creativity-in-education",
+    "name": "Creativity in Education",
+    "one_line_desc": "Creativity is essential for engaging students in learning.",
+    "first_timestamp": 193.0,
+    "chunk_ids": [
+      4
+    ],
+    "prerequisites": []
+  },
+  {
+    "id": "creative-expression-drawing",
+    "name": "Creative Expression in Drawing Lesson",
+    "one_line_desc": "Teacher recognized student's creativity in a drawing lesson.",
+    "first_timestamp": 235.058,
+    "chunk_ids": [
+      5
+    ],
+    "prerequisites": [
+      "creativity-in-education"
+    ]
+  },
+  {
+    "id": "loss-of-creativity",
+    "name": "Loss of Creativity in Adulthood",
+    "one_line_desc": "Most kids lose creativity by adulthood due to education systems.",
+    "first_timestamp": 357.995,
+    "chunk_ids": [
+      8
+    ],
+    "prerequisites": [
+      "creativity-in-education"
+    ]
+  },
+  {
+    "id": "importance-arts",
+    "name": "Importance of Arts in Education",
+    "one_line_desc": "Arts like dance are as vital as math in education.",
+    "first_timestamp": 556.591,
+    "chunk_ids": [
+      13
+    ],
+    "prerequisites": [
+      "creativity-in-education"
+    ]
+  },
+  {
+    "id": "public-education-systems",
+    "name": "Public Education Systems",
+    "one_line_desc": "Public education systems emerged around the world historically.",
+    "first_timestamp": 681.325,
+    "chunk_ids": [
+      16,
+      17
+    ],
+    "prerequisites": []
+  },
+  {
+    "id": "critique-modern-education",
+    "name": "Critique of Modern Education Systems",
+    "one_line_desc": "Education systems mine minds and prioritize conformity over creativity.",
+    "first_timestamp": 1093.128,
+    "chunk_ids": [
+      26,
+      27
+    ],
+    "prerequisites": [
+      "public-education-systems"
+    ]
+  },
+  {
+    "id": "brain-development-learning",
+    "name": "Brain Development and Learning",
+    "one_line_desc": "Human brain interactions underpin learning processes.",
+    "first_timestamp": 804.673,
+    "chunk_ids": [
+      19
+    ],
+    "prerequisites": []
+  },
+  {
+    "id": "individual-creativity-vs-society",
+    "name": "Individual Creativity vs Societal Expectations",
+    "one_line_desc": "Children's creativity clashes with societal expectations of conformity.",
+    "first_timestamp": 1009.627,
+    "chunk_ids": [
+      24
+    ],
+    "prerequisites": [
+      "loss-of-creativity"
+    ]
+  },
+  {
+    "id": "success-metrics-education",
+    "name": "Success Metrics in Education",
+    "one_line_desc": "Education systems prioritize metrics like grades over creativity.",
+    "first_timestamp": 598.91,
+    "chunk_ids": [
+      14
+    ],
+    "prerequisites": [
+      "critique-modern-education"
+    ]
+  }
+]

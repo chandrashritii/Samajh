@@ -1,0 +1,112 @@
+[
+  {
+    "id": "broader-context",
+    "name": "Broader Context",
+    "one_line_desc": "Placing life and community in a broader context.",
+    "first_timestamp": 38.92,
+    "chunk_ids": [
+      1
+    ],
+    "prerequisites": []
+  },
+  {
+    "id": "caloric-affordability",
+    "name": "Caloric Affordability",
+    "one_line_desc": "Calories served for money, impacting food access.",
+    "first_timestamp": 114.0,
+    "chunk_ids": [
+      3
+    ],
+    "prerequisites": []
+  },
+  {
+    "id": "human-migration-patterns",
+    "name": "Human Migration Patterns",
+    "one_line_desc": "Historical movement of populations across continents.",
+    "first_timestamp": 154.52,
+    "chunk_ids": [
+      4,
+      5
+    ],
+    "prerequisites": [
+      "broader-context"
+    ]
+  },
+  {
+    "id": "farming-challenges",
+    "name": "Farming Challenges",
+    "one_line_desc": "Farming is hard, requires labor and mobility.",
+    "first_timestamp": 232.36,
+    "chunk_ids": [
+      6,
+      8,
+      9
+    ],
+    "prerequisites": [
+      "caloric-affordability"
+    ]
+  },
+  {
+    "id": "economic-incentives-agriculture",
+    "name": "Economic Incentives in Agriculture",
+    "one_line_desc": "Profit motives in food production (e.g., burgers).",
+    "first_timestamp": 272.92,
+    "chunk_ids": [
+      7
+    ],
+    "prerequisites": [
+      "farming-challenges"
+    ]
+  },
+  {
+    "id": "animal-domestication",
+    "name": "Animal Domestication",
+    "one_line_desc": "Domesticating animals for sustenance and labor.",
+    "first_timestamp": 386.36,
+    "chunk_ids": [
+      10,
+      11
+    ],
+    "prerequisites": [
+      "farming-challenges"
+    ]
+  },
+  {
+    "id": "civilization-development",
+    "name": "Civilization Development",
+    "one_line_desc": "Rise of complex societies with hierarchies and conflict.",
+    "first_timestamp": 508.12,
+    "chunk_ids": [
+      13,
+      14,
+      15
+    ],
+    "prerequisites": [
+      "human-migration-patterns"
+    ]
+  },
+  {
+    "id": "social-structures-inequality",
+    "name": "Social Structures and Inequality",
+    "one_line_desc": "Patriarchy, war, and famine in early civilizations.",
+    "first_timestamp": 583.76,
+    "chunk_ids": [
+      15
+    ],
+    "prerequisites": [
+      "civilization-development"
+    ]
+  },
+  {
+    "id": "modern-societal-challenges",
+    "name": "Modern Societal Challenges",
+    "one_line_desc": "Historical patterns shaping today's world.",
+    "first_timestamp": 621.28,
+    "chunk_ids": [
+      16
+    ],
+    "prerequisites": [
+      "civilization-development"
+    ]
+  }
+]

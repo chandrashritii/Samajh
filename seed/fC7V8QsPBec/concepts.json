@@ -1,0 +1,123 @@
+[
+  {
+    "id": "machine-learning",
+    "name": "Machine Learning",
+    "one_line_desc": "Learning from experience to improve performance on tasks",
+    "first_timestamp": 76.02,
+    "chunk_ids": [
+      2,
+      3,
+      4,
+      7,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25
+    ],
+    "prerequisites": []
+  },
+  {
+    "id": "performance-measure",
+    "name": "Performance Measure",
+    "one_line_desc": "Metric evaluating model success (e.g., accuracy, error)",
+    "first_timestamp": 107.01,
+    "chunk_ids": [
+      3,
+      4,
+      5,
+      6,
+      9,
+      16,
+      17,
+      18,
+      19
+    ],
+    "prerequisites": [
+      "machine-learning"
+    ]
+  },
+  {
+    "id": "inductive-learning",
+    "name": "Inductive Learning",
+    "one_line_desc": "Improving performance with more experience",
+    "first_timestamp": 255.03,
+    "chunk_ids": [
+      7,
+      8
+    ],
+    "prerequisites": [
+      "performance-measure"
+    ]
+  },
+  {
+    "id": "unsupervised-learning",
+    "name": "Unsupervised Learning",
+    "one_line_desc": "Learning without explicit desired outputs",
+    "first_timestamp": 469.94,
+    "chunk_ids": [
+      13,
+      14
+    ],
+    "prerequisites": [
+      "machine-learning"
+    ]
+  },
+  {
+    "id": "association",
+    "name": "Association",
+    "one_line_desc": "Unsupervised learning paradigm for finding patterns",
+    "first_timestamp": 508.67,
+    "chunk_ids": [
+      14
+    ],
+    "prerequisites": [
+      "unsupervised-learning"
+    ]
+  },
+  {
+    "id": "classification-error",
+    "name": "Classification Error",
+    "one_line_desc": "Measure of incorrect predictions in classification",
+    "first_timestamp": 581.03,
+    "chunk_ids": [
+      16
+    ],
+    "prerequisites": [
+      "performance-measure"
+    ]
+  },
+  {
+    "id": "external-evaluation",
+    "name": "External Evaluation",
+    "one_line_desc": "Assessing models using separate test data",
+    "first_timestamp": 691.62,
+    "chunk_ids": [
+      19
+    ],
+    "prerequisites": [
+      "performance-measure"
+    ]
+  },
+  {
+    "id": "challenges-in-model-building",
+    "name": "Challenges in Model Building",
+    "one_line_desc": "Data quality, noise, and relevance issues",
+    "first_timestamp": 729.15,
+    "chunk_ids": [
+      20,
+      23
+    ],
+    "prerequisites": [
+      "machine-learning"
+    ]
+  }
+]

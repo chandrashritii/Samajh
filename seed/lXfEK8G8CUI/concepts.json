@@ -1,0 +1,182 @@
+[
+  {
+    "id": "human-immune-system",
+    "name": "Human Immune System",
+    "one_line_desc": "Most complex biological system protecting against microorganisms",
+    "first_timestamp": 0.8,
+    "chunk_ids": [
+      0
+    ],
+    "prerequisites": []
+  },
+  {
+    "id": "immune-protection",
+    "name": "Immune Protection",
+    "one_line_desc": "Protects against billions of microorganisms",
+    "first_timestamp": 37.93,
+    "chunk_ids": [
+      1
+    ],
+    "prerequisites": [
+      "human-immune-system"
+    ]
+  },
+  {
+    "id": "pathogen-invasion",
+    "name": "Pathogen Invasion",
+    "one_line_desc": "Pathogens invade and threaten the body",
+    "first_timestamp": 78.512,
+    "chunk_ids": [
+      2
+    ],
+    "prerequisites": [
+      "immune-protection"
+    ]
+  },
+  {
+    "id": "cell-distress-signals",
+    "name": "Cell Distress Signals",
+    "one_line_desc": "Damaged or dying cells send distress signals",
+    "first_timestamp": 117.91,
+    "chunk_ids": [
+      3
+    ],
+    "prerequisites": [
+      "pathogen-invasion"
+    ]
+  },
+  {
+    "id": "macrophage-function",
+    "name": "Macrophage Function",
+    "one_line_desc": "Macrophages engulf and destroy bacteria",
+    "first_timestamp": 158.06,
+    "chunk_ids": [
+      4
+    ],
+    "prerequisites": [
+      "cell-distress-signals"
+    ]
+  },
+  {
+    "id": "inflammatory-response",
+    "name": "Inflammatory Response",
+    "one_line_desc": "Pathogens' careless attacks cause inflammation",
+    "first_timestamp": 194.97,
+    "chunk_ids": [
+      5
+    ],
+    "prerequisites": [
+      "pathogen-invasion"
+    ]
+  },
+  {
+    "id": "inflammation-symptoms",
+    "name": "Inflammation Symptoms",
+    "one_line_desc": "Redness, warmth, swelling as inflammation signs",
+    "first_timestamp": 235.82,
+    "chunk_ids": [
+      6
+    ],
+    "prerequisites": [
+      "inflammatory-response"
+    ]
+  },
+  {
+    "id": "helper-t-cell-function",
+    "name": "Helper T Cell Function",
+    "one_line_desc": "Helper T cells coordinate immune response",
+    "first_timestamp": 274.064,
+    "chunk_ids": [
+      7
+    ],
+    "prerequisites": [
+      "macrophage-function"
+    ]
+  },
+  {
+    "id": "antibody-specificity",
+    "name": "Antibody Specificity",
+    "one_line_desc": "Antibodies have specific weapons for pathogens",
+    "first_timestamp": 307.5,
+    "chunk_ids": [
+      8
+    ],
+    "prerequisites": [
+      "helper-t-cell-function"
+    ]
+  },
+  {
+    "id": "immune-system-weapons",
+    "name": "Immune System Weapons",
+    "one_line_desc": "Immune system has specific weapons for every disease",
+    "first_timestamp": 346.25,
+    "chunk_ids": [
+      9
+    ],
+    "prerequisites": [
+      "antibody-specificity"
+    ]
+  },
+  {
+    "id": "helper-t-cell-cloning",
+    "name": "Helper T Cell Cloning",
+    "one_line_desc": "Helper T cells clone to amplify response",
+    "first_timestamp": 385.01,
+    "chunk_ids": [
+      10
+    ],
+    "prerequisites": [
+      "helper-t-cell-function"
+    ]
+  },
+  {
+    "id": "macrophage-activation",
+    "name": "Macrophage Activation",
+    "one_line_desc": "Macrophages become aggressive to destroy pathogens",
+    "first_timestamp": 426.64,
+    "chunk_ids": [
+      11
+    ],
+    "prerequisites": [
+      "cell-distress-signals"
+    ]
+  },
+  {
+    "id": "helper-t-b-cell-interaction",
+    "name": "Helper T-B Cell Interaction",
+    "one_line_desc": "Helper T cells activate B cells for antibody production",
+    "first_timestamp": 463.45,
+    "chunk_ids": [
+      12
+    ],
+    "prerequisites": [
+      "helper-t-cell-function",
+      "antibody-specificity"
+    ]
+  },
+  {
+    "id": "immune-response-resolution",
+    "name": "Immune Response Resolution",
+    "one_line_desc": "Immune system clears pathogens and repairs",
+    "first_timestamp": 501.46,
+    "chunk_ids": [
+      13
+    ],
+    "prerequisites": [
+      "helper-t-cell-cloning",
+      "macrophage-activation"
+    ]
+  },
+  {
+    "id": "immune-system-unawareness",
+    "name": "Immune System Unawareness",
+    "one_line_desc": "Individuals unaware of immune system's constant activity",
+    "first_timestamp": 541.04,
+    "chunk_ids": [
+      14
+    ],
+    "prerequisites": [
+      "immune-response-resolution"
+    ]
+  }
+]

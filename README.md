@@ -1,4 +1,22 @@
-# Sarvam Video Tutor — P0 + P1-A
+# Samajh · समझ — ask any lecture your doubts
+
+**Thesis:** Samajh turns any YouTube lecture into a tutor you can talk to — in your language, by voice — that answers **only from that lecture**, cites the exact moment it's drawn from, and **refuses rather than hallucinate** when the answer isn't in the video. It also quizzes you on what the lecture taught and tracks what you've actually understood. Grounded, vernacular, voice-first, won't make things up.
+
+- **Public product:** `/` — the polished learner surface (Samajh).
+- **Developer test bench:** `/dev` — the raw surface with similarity scores, `grounded` flags, session ids, and raw-JSON toggles (the engine room; unchanged).
+
+## How to use it
+1. **Pick or paste a lecture.** Tap a curated chip (Strang Linear Algebra, 3Blue1Brown, NPTEL, or a Hindi-medium Physics Wallah lecture) — it auto-loads — or paste *any* YouTube link. Ingestion is open; any video works.
+2. **Ask by voice.** Tap the mic and speak your doubt in English, हिन्दी, or தமிழ். Pick "Answer me in" to hear it back code-switched (technical terms stay English). Text works too.
+3. **Hear it, grounded.** The answer is spoken aloud and shows **"from 8:39"** citation chips — click one to jump the video to that moment. If it's not in the lecture, Samajh says so.
+4. **Test your understanding.** "Test my understanding" starts an adaptive spoken viva (or teach-back) that targets the concepts you haven't nailed yet, grades your spoken answer *against the lecture*, and gives a friendly mastery read.
+
+## Architecture (one line)
+Captions → ~45s chunks → MiniLM + FAISS → top-k retrieval with a similarity floor → Sarvam **chat** answers from *only* the retrieved excerpts (refusal if ungrounded) → Sarvam **Mayura** translates code-mixed (terms stay English) → Sarvam **Saaras** (voice in) and **Bulbul** (voice out) wrap it; the viva reuses the same grounded core.
+
+---
+
+## Under the hood
 
 A grounded YouTube-lecture Q&A agent. You give it a lecture URL; it builds a transcript index and answers your doubts **strictly from that lecture** with timestamp citations. If the answer isn't in the lecture, it refuses rather than hallucinate. Vernacular (Hindi / Tamil) answering keeps technical terms in English.
 
@@ -213,3 +231,45 @@ Response shape for `/ask`:
 - **Mastery state machine is explicit and minimal.** `unseen → engaged → shaky → demonstrated` with documented transitions. State is filed under `data/sessions/{session_id}.json` (atomic writes, single JSON per session). Attribution uses the cheapest signal first (shared chunk indices) and exposes `mark_demonstrated()` as the future-viva hook.
 - **Register dial is per-sentence, not per-call.** `more_english` is the only register that uses sentence-level logic: sentences with 2+ glossary hits stay verbatim English; the rest go through `code-mixed` translation. `more_vernacular` switches Mayura to `classic-colloquial`, which leans more purely Indic at the cost of occasionally transliterating a term — the user opted in. `balanced` is `code-mixed`.
 - **STT fallback is implemented but not the demo path.** Caption-less educational lectures are rare; getting STT-with-timestamps right for hour-long videos is non-trivial (REST endpoint limit + chunk stitching). Implemented carefully but flagged as best-effort.
+
+---
+
+## Deploy
+
+Serve everything (API + both frontends) from one FastAPI app — no CORS, one origin. The Sarvam key stays **server-side only** (`SARVAM_API_KEY` env var); the browser never sees it. All STT/TTS/chat/translate calls go through the backend.
+
+**One-click (Render Blueprint):**
+1. Push to GitHub (done).
+2. [render.com](https://render.com) → **New → Blueprint** → pick this repo (`render.yaml` is detected).
+3. Set `SARVAM_API_KEY` (and optionally `SARVAM_API_KEY_FALLBACK`) when prompted.
+4. Deploy. `/health` is the platform health check.
+
+**Why deploys are painless here:**
+- **Docker image** installs `ffmpeg` and **warms the MiniLM model at build** — no first-request download stall.
+- The four curated chip lectures are **bundled in the image** (`seed/`, ~400 KB of FAISS + JSON) and restored into `data/` at startup, so chips load **instantly on every cold start with zero Sarvam cost** — no persistent disk needed. Pasted links ingest live on demand (`PREWARM_CHIPS=0` skips re-ingesting the chips).
+- `requirements.txt` is fully pinned (`pip freeze`) so the build matches local.
+
+Any Docker host works (Railway, Fly, a VM): `docker build -t samajh . && docker run -p 8000:8000 -e SARVAM_API_KEY=... samajh`.
+
+### Env vars
+| var | required | purpose |
+| --- | --- | --- |
+| `SARVAM_API_KEY` | yes | Sarvam auth (STT/TTS/chat/translate) |
+| `SARVAM_API_KEY_FALLBACK` | no | second key, auto-retried on 401/403/429 |
+| `PREWARM_CHIPS` | no | `0` to rely on bundled `seed/` (deploy default); `1` to live-ingest chips at startup |
+| `LLM_PROVIDER` | no | `sarvam` (default) or `gemini` |
+
+## Scale & openness
+Built for the builder + a reviewer or two. **No rate limiting, no abuse guards, no ingestion allowlist** — any YouTube link works. The only protection that matters is the server-side key.
+
+## Honest notes (approach & challenges)
+- **The headline feature is the refusal.** Two independent gates — a retrieval-similarity floor (0.25) *before* the LLM, then the LLM's own `grounded=false` — catch different failure modes. The viva inherits the same discipline: a passing verdict with no citation is demoted to `unsupported`, and answers are graded **against the lecture chunks**, never outside knowledge.
+- **Voice/viva are adapters, not a parallel brain.** `/ask_voice` is Saaras → the *existing* grounded `/ask` core → Bulbul. The viva reuses retrieval + grounding. Nothing about the answer logic forks.
+- **Hindi-source concept extraction is best-effort.** `sarvam-m` is a reasoning model that can exhaust its output budget "thinking" on long/vernacular transcripts; we strip `<think>`, salvage truncated JSON, map-reduce long lectures, and fall back to chunk-derived concepts so the map is never empty. The Hindi chip's map is usable but noisier than the English ones — so the viva is **demo-anchored on a clean English lecture**.
+- **"Talks-around-it" topics are a known grounding edge.** When a lecture discusses the neighbourhood of a question but never states the answer (e.g. 3Blue1Brown *mentions* backprop but defers the mechanism), the model occasionally answers from adjacent material instead of refusing. It's the one non-deterministic probe in the harness; flagged, not hidden.
+- **Bundled seed vs. live ingest.** Pre-ingesting chips at runtime spends credits on every cold start; bundling the tiny indices into the image removes that entirely while keeping arbitrary links fully open.
+
+## Verifying the build
+- `python scripts/test_harness.py` — batch QA over real lectures (grounding, refusal, code-switch, attribution, robustness, cache, session isolation) → `test_report.md`.
+- `python scripts/edge_cases.py` — prompt injection, empty/emoji/over-long input, unsupported language, off-topic mastery hygiene, `top_sim` on every path.
+- `python scripts/test_voice_viva.py` — voice loop + viva over pre-recorded fixtures (no live mic needed).
