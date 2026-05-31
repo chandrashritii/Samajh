@@ -290,7 +290,17 @@ def submit(viva_id: str, transcript: str) -> dict | None:
     by_idx = {c.idx: c for c in chunks}
     ctx = [by_idx[i] for i in cur.get("chunk_ids", []) if i in by_idx]
 
-    ev = _evaluate(cur["question"], transcript, ctx, viva["mode"])
+    # Guard: an empty / too-short transcript (mic opened but nothing said) must
+    # NOT reach the grader — the LLM tends to hallucinate "correct" on empty
+    # input. Treat it as no-answer-given (incorrect) deterministically.
+    if len((transcript or "").strip()) < 3:
+        ev = {
+            "verdict": "incorrect",
+            "rationale": "I didn't catch an answer — try saying it aloud.",
+            "citations": [],
+        }
+    else:
+        ev = _evaluate(cur["question"], transcript, ctx, viva["mode"])
 
     # Citations payload (start/end/snippet) from the concept's own chunks.
     citations = []

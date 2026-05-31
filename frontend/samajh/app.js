@@ -123,6 +123,57 @@ function renderChips() {
   }));
 }
 
+// ---- open a lecture (library card or pasted link) ------------------------
+
+async function openLecture(url) {
+  const status = $("#hero-status");
+  $("#open-btn").disabled = true;
+  status.className = "hero-status";
+  status.textContent = "Opening the lecture — reading captions, building the index…";
+  try {
+    const meta = await postJSON("/ingest", { url });
+    state.videoId = meta.video_id;
+    const entry = libEntry(meta.video_id);
+    state.title = entry ? entry.title
+      : ((meta.title && meta.title !== meta.video_id) ? meta.title : null);
+    state.suggestedQuestions = entry ? (entry.suggested_questions || []) : [];
+    state.sessionId = state.sessionId || newSession();
+    if (entry && entry.lang) setLang(entry.lang);
+    await mountPlayer(meta.video_id);
+    const strip = [`${meta.segments} sections`, `${meta.concepts} concepts`];
+    $("#lecture-strip").innerHTML =
+      (state.title ? `<span class="lec-title">${esc(state.title)}</span> · ` : "") + strip.join(" · ");
+    $("#hero").classList.add("hidden");
+    $("#surface").classList.remove("hidden");
+    $("#reset-btn").classList.remove("hidden");
+    window.scrollTo(0, 0);
+    renderSuggestedQuestions();
+    await refreshConcepts();
+    await refreshMastery();
+    $("#question").focus();
+  } catch (e) {
+    status.className = "hero-status error";
+    status.textContent = `Couldn't open that lecture: ${e.message}. Try another link.`;
+  } finally {
+    $("#open-btn").disabled = false;
+  }
+}
+
+$("#open-btn").addEventListener("click", () => {
+  const u = $("#url").value.trim();
+  if (u) openLecture(u);
+});
+$("#url").addEventListener("keydown", e => {
+  if (e.key === "Enter") { const u = $("#url").value.trim(); if (u) openLecture(u); }
+});
+$("#reset-btn").addEventListener("click", () => {
+  $("#surface").classList.add("hidden");
+  $("#hero").classList.remove("hidden");
+  $("#reset-btn").classList.add("hidden");
+  $("#thread").innerHTML = "";
+  state.videoId = null;
+});
+
 // Language + voice controls appear in two places (ask panel + viva). They share
 // state.lang / state.speaker; helpers take element ids so each instance syncs.
 

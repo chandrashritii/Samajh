@@ -26,10 +26,23 @@ from .schemas import (
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("tutor")
 
-app = FastAPI(title="Sarvam Video Tutor", version="0.2.0")
+app = FastAPI(title="Samajh", version="0.3.0")
 app.add_middleware(
     CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def _no_cache_frontend(request, call_next):
+    """Serve the frontend (/, /dev, /static/*) with no-cache so a browser never
+    runs a stale app.js/style.css/library.json after an update — the cause of
+    'clicking a lecture does nothing / 404s' from an out-of-date cached script.
+    Tiny app, no CDN: revalidating each load is free and removes the bug class."""
+    response = await call_next(request)
+    p = request.url.path
+    if p == "/" or p == "/dev" or p.startswith("/static/"):
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    return response
 
 
 @app.get("/health", response_model=Health)
