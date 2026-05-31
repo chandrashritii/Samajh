@@ -13,8 +13,8 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import (
-    answering, concept_map, config, indexing, ingestion, mastery, retrieval,
-    translation, voice, viva as viva_mod,
+    answering, concept_map, config, indexing, ingestion, mastery, multilingual,
+    retrieval, translation, voice, viva as viva_mod,
 )
 from .schemas import (
     AskRequest, AskResponse, AskVoiceResponse, Citation, ConceptMapResponse, Health,
@@ -83,8 +83,13 @@ def ingest_endpoint(req: IngestRequest) -> LectureMeta:
         raise HTTPException(status_code=422, detail="Transcript produced no usable chunks.")
 
     duration = float(segments[-1]["end"]) if segments else 0.0
-    meta = {"title": video_id, "duration": duration, "transcript_source": source}
-    indexing.build_and_persist(video_id, chunks, meta)
+    # Cross-lingual: a non-English transcript is embedded from English
+    # translations (original text kept for display/answering) so English and
+    # Indic queries both retrieve. English lectures are unchanged.
+    embed_texts, transcript_lang = multilingual.embedding_inputs(chunks)
+    meta = {"title": video_id, "duration": duration, "transcript_source": source,
+            "transcript_lang": transcript_lang}
+    indexing.build_and_persist(video_id, chunks, meta, embed_texts=embed_texts)
     concepts = _ensure_concepts(video_id, chunks)
     log.info("ingested %s: %d segs → %d chunks (%s); %d concepts",
              video_id, len(segments), len(chunks), source, len(concepts))
@@ -156,7 +161,12 @@ def _run_ask(req: AskRequest) -> AskResponse:
         raise HTTPException(status_code=404, detail="Lecture not indexed. Call /ingest first.")
 
     index, chunks, _meta = indexing.load(req.video_id)
-    hits = retrieval.top_k(index, chunks, req.question, k=config.RETRIEVAL_K)
+    # Cross-lingual retrieval: for a non-English lecture, embed an English-
+    # translated query (Indic-script only). The original question still drives
+    # answering, so answer language/register behaviour is unchanged.
+    embed_q = multilingual.prepare_query(req.question, _meta.get("transcript_lang", "en"))
+    hits = retrieval.top_k(index, chunks, req.question, k=config.RETRIEVAL_K,
+                           embed_text=embed_q)
     result = answering.answer(req.question, hits)
 
     # Build citations payload from the hits indices.
@@ -236,6 +246,13 @@ def get_audio(audio_id: str) -> FileResponse:
     return FileResponse(p, media_type="audio/wav")
 
 
+def _valid_speaker(speaker: Optional[str]) -> Optional[str]:
+    """Accept a requested Bulbul speaker only if it's on the supported list;
+    otherwise None → voice.speak_answer falls back to the configured default."""
+    s = (speaker or "").strip().lower()
+    return s if s in config.SARVAM_TTS_SPEAKERS else None
+
+
 @app.post("/ask_voice", response_model=AskVoiceResponse)
 def ask_voice(
     audio: UploadFile = File(...),
@@ -243,6 +260,7 @@ def ask_voice(
     session_id: Optional[str] = Form(None),
     language: str = Form("en"),
     register: str = Form("balanced"),
+    speaker: Optional[str] = Form(None),
 ) -> AskVoiceResponse:
     """Saaras (STT) → existing grounded /ask core → Bulbul (TTS). The answer
     logic is unchanged; this is purely an adapter."""
@@ -280,7 +298,7 @@ def ask_voice(
     if base.misconception and base.misconception.detected and base.misconception.correction:
         spoken = f"{base.misconception.correction} {base.answer}"
     try:
-        audio_id = voice.speak_answer(spoken, language)
+        audio_id = voice.speak_answer(spoken, language, speaker=_valid_speaker(speaker))
     except Exception as e:
         log.warning("TTS failed (returning text-only): %s", e)
         audio_id = None
@@ -307,7 +325,7 @@ def viva_start(req: VivaStartRequest) -> VivaStartResponse:
     spoken_q = translation.translate_answer(cur["question"], req.language, req.register)
     audio_id = None
     try:
-        audio_id = voice.speak_answer(spoken_q, req.language)
+        audio_id = voice.speak_answer(spoken_q, req.language, speaker=_valid_speaker(req.speaker))
     except Exception as e:
         log.warning("viva start TTS failed: %s", e)
     return VivaStartResponse(
@@ -323,6 +341,7 @@ def viva_answer(
     viva_id: str = Form(...),
     language: str = Form("en"),
     register: str = Form("balanced"),
+    speaker: Optional[str] = Form(None),
 ) -> VivaAnswerResponse:
     import os
     v = viva_mod.load(viva_id)
@@ -360,7 +379,7 @@ def viva_answer(
     speak_parts = [p for p in (rationale, reexpl, next_q) if p]
     audio_id = None
     try:
-        audio_id = voice.speak_answer(" ".join(speak_parts), language)
+        audio_id = voice.speak_answer(" ".join(speak_parts), language, speaker=_valid_speaker(speaker))
     except Exception as e:
         log.warning("viva answer TTS failed: %s", e)
 

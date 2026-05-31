@@ -83,7 +83,7 @@ class AskRequest(BaseModel):
 
     video_id: str
     question: str
-    language: Literal["en", "hi", "ta"] = "en"
+    language: str = "en"
     session_id: Optional[str] = None
     register: Register = Register.BALANCED
 
@@ -142,7 +142,8 @@ class VivaStartRequest(BaseModel):
     video_id: str
     mode: VivaMode = VivaMode.QUIZ
     register: Register = Register.BALANCED
-    language: Literal["en", "hi", "ta"] = "en"
+    language: str = "en"
+    speaker: Optional[str] = None
 
 
 class VivaStartResponse(BaseModel):

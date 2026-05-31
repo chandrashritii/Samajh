@@ -14,8 +14,12 @@ class Hit:
     score: float
 
 
-def top_k(index: faiss.Index, chunks: list[Chunk], question: str, k: int) -> list[Hit]:
-    qv = embed_query(question)
+def top_k(index: faiss.Index, chunks: list[Chunk], question: str, k: int,
+          embed_text: str | None = None) -> list[Hit]:
+    # `embed_text`, when given, is what we embed for the similarity search (e.g. a
+    # query translated into the lecture's embed language). Returned Hits/scores
+    # are otherwise identical; answering still uses the original `question`.
+    qv = embed_query(embed_text if embed_text is not None else question)
     k = min(k, len(chunks))
     if k == 0:
         return []

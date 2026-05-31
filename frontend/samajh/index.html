@@ -19,7 +19,7 @@
     </a>
     <div class="topbar-right">
       <button id="reset-btn" class="link-btn hidden" title="Start over">start over</button>
-      <a class="link-btn subtle" href="/dev" title="Developer test bench">dev</a>
+      <span class="byline">~ Shriti Chandra</span>
     </div>
   </header>
 
@@ -36,16 +36,21 @@
           with the exact moment cited. If it isn't in the video, Samajh says so rather than guess.
         </p>
 
-        <div class="loader reveal" style="--d:3">
-          <input id="url" type="text" inputmode="url"
-                 placeholder="Paste a YouTube lecture link…" autocomplete="off" />
-          <button id="open-btn">Open lecture</button>
+        <!-- Library is the primary entry: a prominent grid of ready lectures. -->
+        <div class="library reveal" style="--d:3">
+          <span class="library-label">Pick a lecture to begin</span>
+          <div class="library-grid" id="chip-row"><!-- cards injected --></div>
         </div>
-        <p id="hero-status" class="hero-status"></p>
 
-        <div class="chips reveal" style="--d:4">
-          <span class="chips-label">or try one</span>
-          <div class="chip-row" id="chip-row"><!-- chips injected --></div>
+        <!-- Secondary: paste any YouTube link. -->
+        <div class="paste-row reveal" style="--d:4">
+          <span class="paste-label">or paste any YouTube link</span>
+          <div class="loader">
+            <input id="url" type="text" inputmode="url"
+                   placeholder="https://www.youtube.com/watch?v=…" autocomplete="off" />
+            <button id="open-btn">Open</button>
+          </div>
+          <p id="hero-status" class="hero-status"></p>
         </div>
       </div>
     </section>
@@ -80,15 +85,24 @@
         <section class="panel ask-panel">
           <div class="ask-lang">
             <span class="ask-lang-label">Answer me in</span>
-            <div class="seg" id="lang-seg" role="tablist">
-              <button class="seg-opt active" data-lang="en">English</button>
-              <button class="seg-opt" data-lang="hi" lang="hi">हिन्दी</button>
-              <button class="seg-opt" data-lang="ta" lang="ta">தமிழ்</button>
-            </div>
+            <div class="seg lang-seg" id="lang-seg" role="tablist"><!-- lang options injected --></div>
             <div class="blend hidden" id="blend-row">
-              <span class="blend-end" id="blend-left">more हिन्दी</span>
+              <span class="blend-end" id="blend-left">more vernacular</span>
               <input type="range" id="blend" min="0" max="2" step="1" value="1" />
               <span class="blend-end">more English</span>
+            </div>
+            <div class="voice-pick">
+              <span class="ask-lang-label">Voice</span>
+              <div class="voice-dd" id="voice-dd">
+                <button type="button" class="voice-trigger" id="voice-trigger"
+                        aria-haspopup="listbox" aria-expanded="false">
+                  <span id="voice-current">Anushka</span>
+                  <svg class="voice-chev" viewBox="0 0 12 8" width="12" height="8" aria-hidden="true">
+                    <path d="M1 1.5L6 6.5L11 1.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+                <ul class="voice-menu hidden" id="voice-menu" role="listbox" aria-label="Spoken-answer voice"><!-- voices injected --></ul>
+              </div>
             </div>
           </div>
 
@@ -126,6 +140,20 @@
           <div class="seg small" id="viva-mode">
             <button class="seg-opt active" data-mode="quiz">Quiz me</button>
             <button class="seg-opt" data-mode="teach_back">I'll explain</button>
+          </div>
+        </div>
+
+        <div class="viva-voice-row">
+          <span class="ask-lang-label">Spoken in</span>
+          <div class="seg small lang-seg" id="viva-lang"><!-- lang options injected --></div>
+          <div class="voice-dd" id="viva-voice-dd">
+            <button type="button" class="voice-trigger" id="viva-voice-trigger" aria-haspopup="listbox" aria-expanded="false">
+              <span id="viva-voice-current">Anushka</span>
+              <svg class="voice-chev" viewBox="0 0 12 8" width="12" height="8" aria-hidden="true">
+                <path d="M1 1.5L6 6.5L11 1.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <ul class="voice-menu hidden" id="viva-voice-menu" role="listbox" aria-label="Viva voice"><!-- voices injected --></ul>
           </div>
         </div>
 

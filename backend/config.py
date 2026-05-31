@@ -43,8 +43,18 @@ GROUNDING_SIM_THRESHOLD = float(os.getenv("GROUNDING_SIM_THRESHOLD", "0.25"))
 CHUNK_TARGET_SECONDS = float(os.getenv("CHUNK_TARGET_SECONDS", "45"))
 CHUNK_OVERLAP_SEGMENTS = int(os.getenv("CHUNK_OVERLAP_SEGMENTS", "1"))
 
-SUPPORTED_LANGUAGES = {"en", "hi", "ta"}
-LANG_TO_SARVAM_CODE = {"en": "en-IN", "hi": "hi-IN", "ta": "ta-IN"}
+# All languages with both Sarvam translate (Mayura) and TTS (Bulbul) support,
+# verified live. Answers translate + speak in any of these.
+SUPPORTED_LANGUAGES = {"en", "hi", "ta", "bn", "gu", "kn", "ml", "mr", "od", "pa", "te"}
+LANG_TO_SARVAM_CODE = {
+    "en": "en-IN", "hi": "hi-IN", "ta": "ta-IN", "bn": "bn-IN", "gu": "gu-IN",
+    "kn": "kn-IN", "ml": "ml-IN", "mr": "mr-IN", "od": "od-IN", "pa": "pa-IN",
+    "te": "te-IN",
+}
+
+# Bulbul v2 speakers accepted on this tier (verified live). Used to validate the
+# optional per-request voice picker; falls back to SARVAM_TTS_SPEAKER otherwise.
+SARVAM_TTS_SPEAKERS = {"anushka", "vidya", "arya", "manisha", "abhilash", "karun", "hitesh"}
 
 REFUSAL_EN = "That isn't covered in this lecture."
 

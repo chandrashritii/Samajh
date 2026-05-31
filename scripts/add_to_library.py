@@ -69,8 +69,13 @@ def ingest_video(url: str, force: bool) -> tuple[str, dict]:
         if not chunks:
             raise RuntimeError("Transcript produced no usable chunks (sparse/no captions).")
         duration = float(segments[-1]["end"]) if segments else 0.0
+        # Cross-lingual: embed English translations for non-English transcripts.
+        embed_texts, transcript_lang = multilingual.embedding_inputs(chunks)
         indexing.build_and_persist(
-            video_id, chunks, {"title": video_id, "duration": duration, "transcript_source": source})
+            video_id, chunks,
+            {"title": video_id, "duration": duration, "transcript_source": source,
+             "transcript_lang": transcript_lang},
+            embed_texts=embed_texts)
 
     # Concept map (extract if absent).
     concepts = concept_map.load(video_id)

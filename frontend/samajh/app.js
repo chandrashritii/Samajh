@@ -13,9 +13,34 @@ const STATE_LABEL = { demonstrated: "learned", shaky: "revisit", engaged: "explo
 const STATE_CLASS = { demonstrated: "learned", shaky: "revisit", engaged: "exploring", unseen: "notyet" };
 const REGISTER_BY_BLEND = ["more_vernacular", "balanced", "more_english"];
 
+// Answer languages — all with Sarvam translate (Mayura) + voice (Bulbul) support.
+const LANGS = [
+  { code: "en", label: "English" },
+  { code: "hi", label: "हिन्दी" },
+  { code: "ta", label: "தமிழ்" },
+  { code: "bn", label: "বাংলা" },
+  { code: "gu", label: "ગુજરાતી" },
+  { code: "mr", label: "मराठी" },
+  { code: "te", label: "తెలుగు" },
+  { code: "kn", label: "ಕನ್ನಡ" },
+  { code: "ml", label: "മലയാളം" },
+  { code: "pa", label: "ਪੰਜਾਬੀ" },
+  { code: "od", label: "ଓଡ଼ିଆ" },
+];
+// Bulbul v2 voices available on this tier.
+const SPEAKERS = [
+  { id: "anushka", label: "Anushka (f)" },
+  { id: "vidya", label: "Vidya (f)" },
+  { id: "arya", label: "Arya (f)" },
+  { id: "manisha", label: "Manisha (f)" },
+  { id: "abhilash", label: "Abhilash (m)" },
+  { id: "karun", label: "Karun (m)" },
+  { id: "hitesh", label: "Hitesh (m)" },
+];
+
 const state = {
   videoId: null, sessionId: null, ytPlayer: null, ytLoading: false,
-  concepts: [], lang: "en", title: null, suggestedQuestions: [],
+  concepts: [], lang: "en", title: null, suggestedQuestions: [], speaker: "anushka",
 };
 
 function libEntry(videoId) { return LIBRARY.find(e => e.video_id === videoId) || null; }
@@ -89,7 +114,7 @@ function renderChips() {
   $("#chip-row").innerHTML = LIBRARY.map((e, i) => `
     <button class="chip${i === 0 ? " suggested" : ""}" data-vid="${esc(e.video_id)}">
       <span class="chip-title">${esc(e.title)}</span>
-      <span class="chip-sub">${esc(e.channel)}${e.experimental ? ' <span class="exp-tag">experimental</span>' : ""}</span>
+      <span class="chip-sub">${esc(e.channel)}</span>
     </button>`).join("");
   $$(".chip").forEach(ch => ch.addEventListener("click", () => {
     const url = `https://www.youtube.com/watch?v=${ch.dataset.vid}`;
@@ -98,68 +123,93 @@ function renderChips() {
   }));
 }
 
-async function openLecture(url) {
-  const status = $("#hero-status");
-  $("#open-btn").disabled = true;
-  status.className = "hero-status";
-  status.textContent = "Opening the lecture — reading captions, building the index…";
-  try {
-    const meta = await postJSON("/ingest", { url });
-    state.videoId = meta.video_id;
-    // Prefer the library's curated title/lang/questions; fall back for pasted links.
-    const entry = libEntry(meta.video_id);
-    state.title = entry ? entry.title
-      : ((meta.title && meta.title !== meta.video_id) ? meta.title : null);
-    state.suggestedQuestions = entry ? (entry.suggested_questions || []) : [];
-    state.sessionId = state.sessionId || newSession();
-    if (entry && entry.lang) setLang(entry.lang);
-    await mountPlayer(meta.video_id);
-    const strip = [`${meta.segments} sections`, `${meta.concepts} concepts`];
-    $("#lecture-strip").innerHTML =
-      (state.title ? `<span class="lec-title">${esc(state.title)}</span> · ` : "") + strip.join(" · ");
-    // reveal surface
-    $("#hero").classList.add("hidden");
-    $("#surface").classList.remove("hidden");
-    $("#reset-btn").classList.remove("hidden");
-    window.scrollTo(0, 0);
-    renderSuggestedQuestions();
-    await refreshConcepts();
-    await refreshMastery();
-    $("#question").focus();
-  } catch (e) {
-    status.className = "hero-status error";
-    status.textContent = `Couldn't open that lecture: ${e.message}. Try another link.`;
-  } finally {
-    $("#open-btn").disabled = false;
-  }
+// Language + voice controls appear in two places (ask panel + viva). They share
+// state.lang / state.speaker; helpers take element ids so each instance syncs.
+
+const _speakerLabel = id => (SPEAKERS.find(s => s.id === id) || SPEAKERS[0]).label;
+const _speakerShort = id => _speakerLabel(id).replace(/\s*\(.\)$/, "");
+
+function renderLangs(segId = "lang-seg") {
+  const seg = document.getElementById(segId);
+  if (!seg) return;
+  seg.innerHTML = LANGS.map(l =>
+    `<button class="seg-opt${l.code === state.lang ? " active" : ""}" data-lang="${l.code}" lang="${l.code}">${esc(l.label)}</button>`
+  ).join("");
+  seg.querySelectorAll(".seg-opt").forEach(b => b.addEventListener("click", () => setLang(b.dataset.lang)));
 }
 
-$("#open-btn").addEventListener("click", () => {
-  const u = $("#url").value.trim();
-  if (u) openLecture(u);
-});
-$("#url").addEventListener("keydown", e => { if (e.key === "Enter") { const u = $("#url").value.trim(); if (u) openLecture(u); } });
-$("#reset-btn").addEventListener("click", () => {
-  $("#surface").classList.add("hidden");
-  $("#hero").classList.remove("hidden");
-  $("#reset-btn").classList.add("hidden");
-  $("#thread").innerHTML = "";
-  state.videoId = null;
-});
+function renderSpeakers(triggerId = "voice-trigger", menuId = "voice-menu", currentId = "voice-current") {
+  const trigger = document.getElementById(triggerId), menu = document.getElementById(menuId);
+  const current = document.getElementById(currentId);
+  if (!trigger || !menu) return;
+  const dd = trigger.closest(".voice-dd");
+  if (current) current.textContent = _speakerShort(state.speaker);
 
-// ---- language control ----------------------------------------------------
+  menu.innerHTML = SPEAKERS.map(s =>
+    `<li role="option" class="voice-opt${s.id === state.speaker ? " active" : ""}" data-id="${s.id}" aria-selected="${s.id === state.speaker}">${esc(s.label)}</li>`
+  ).join("");
 
-$$("#lang-seg .seg-opt").forEach(b => b.addEventListener("click", () => {
-  $$("#lang-seg .seg-opt").forEach(x => x.classList.remove("active"));
-  b.classList.add("active");
-  state.lang = b.dataset.lang;
-  const blend = $("#blend-row");
-  if (state.lang === "en") blend.classList.add("hidden");
-  else {
-    blend.classList.remove("hidden");
-    $("#blend-left").textContent = state.lang === "hi" ? "more हिन्दी" : "more தமிழ்";
+  const close = () => { menu.classList.add("hidden"); trigger.setAttribute("aria-expanded", "false"); };
+  const open = () => { menu.classList.remove("hidden"); trigger.setAttribute("aria-expanded", "true"); };
+  trigger.addEventListener("click", e => {
+    e.stopPropagation();
+    menu.classList.contains("hidden") ? open() : close();
+  });
+  menu.querySelectorAll(".voice-opt").forEach(li => li.addEventListener("click", () => {
+    setSpeaker(li.dataset.id);
+    close();
+  }));
+  document.addEventListener("click", e => { if (dd && !dd.contains(e.target)) close(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+}
+
+// Apply a speaker choice to every voice dropdown instance.
+function setSpeaker(id) {
+  state.speaker = id;
+  document.querySelectorAll(".voice-dd").forEach(dd => {
+    const cur = dd.querySelector("[id$='voice-current']");
+    if (cur) cur.textContent = _speakerShort(id);
+    dd.querySelectorAll(".voice-opt").forEach(o => {
+      const on = o.dataset.id === id;
+      o.classList.toggle("active", on);
+      o.setAttribute("aria-selected", on);
+    });
+  });
+}
+
+// Apply a language choice to every lang segmented control + the register dial.
+function setLang(lang) {
+  if (!lang) return;
+  state.lang = lang;
+  document.querySelectorAll(".lang-seg .seg-opt").forEach(x => x.classList.toggle("active", x.dataset.lang === lang));
+  const blend = document.getElementById("blend-row");
+  if (blend) {
+    if (lang === "en") blend.classList.add("hidden");
+    else {
+      blend.classList.remove("hidden");
+      const left = document.getElementById("blend-left");
+      const label = (LANGS.find(l => l.code === lang) || {}).label || "vernacular";
+      if (left) left.textContent = `more ${label}`;
+    }
   }
-}));
+}
+$$("#lang-seg .seg-opt").forEach(b => b.addEventListener("click", () => setLang(b.dataset.lang)));
+
+// ---- suggested-question chips (from the lecture's library entry) ----------
+
+function renderSuggestedQuestions() {
+  const box = $("#suggested-qs");
+  if (!box) return;
+  const qs = state.suggestedQuestions || [];
+  if (!qs.length) { box.innerHTML = ""; box.classList.add("hidden"); return; }
+  box.classList.remove("hidden");
+  box.innerHTML = `<span class="sq-label">try asking</span>` +
+    qs.map(q => `<button class="sq-chip" type="button">${esc(q)}</button>`).join("");
+  $$(".sq-chip", box).forEach(c => c.addEventListener("click", () => {
+    $("#question").value = c.textContent;
+    askText();
+  }));
+}
 
 // ---- ask: text -----------------------------------------------------------
 
@@ -231,6 +281,7 @@ $("#mic-btn").addEventListener("click", async () => {
     fd.append("session_id", state.sessionId || "");
     fd.append("language", state.lang);
     fd.append("register", currentRegister());
+    fd.append("speaker", state.speaker);
     const r = await fetch("/ask_voice", { method: "POST", body: fd });
     const data = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(data.detail || `${r.status}`);
@@ -329,18 +380,44 @@ async function refreshMastery(touched = []) {
 //  Viva
 // ==========================================================================
 
-const viva = { id: null, mode: "quiz", recording: makeRecorder() };
+const viva = { id: null, mode: "quiz", started: false, recording: makeRecorder() };
 
 $("#viva-entry-btn").addEventListener("click", () => {
   $("#viva-overlay").classList.remove("hidden");
   $("#viva-summary").classList.add("hidden");
+  viva.started = false;
+  setModeLock(false);
   resetVivaStage();
 });
 $("#viva-x").addEventListener("click", () => $("#viva-overlay").classList.add("hidden"));
 $("#viva-overlay").addEventListener("click", e => { if (e.target === $("#viva-overlay")) $("#viva-overlay").classList.add("hidden"); });
+
+// Once a viva is underway, the mode is fixed for that run — switching mid-session
+// would silently strand the in-flight viva_id (the flaky tab-doesn't-change UX).
+// We lock the toggle and offer a clean confirm-to-restart instead.
+function setModeLock(locked) {
+  $("#viva-mode").classList.toggle("locked", locked);
+}
 $$("#viva-mode .seg-opt").forEach(b => b.addEventListener("click", () => {
-  $$("#viva-mode .seg-opt").forEach(x => x.classList.remove("active"));
-  b.classList.add("active"); viva.mode = b.dataset.mode;
+  const target = b.dataset.mode;
+  if (target === viva.mode) return;
+  if (viva.started) {
+    const other = target === "quiz" ? "Quiz me" : "I'll explain";
+    if (!confirm(`Switch to "${other}"? This restarts the session and your current progress in this viva is lost.`)) {
+      return;  // keep the active tab as-is; no flaky half-switch
+    }
+    // Confirmed: reset and start fresh in the new mode.
+    viva.mode = target;
+    $$("#viva-mode .seg-opt").forEach(x => x.classList.toggle("active", x.dataset.mode === target));
+    viva.started = false;
+    viva.id = null;
+    setModeLock(false);
+    $("#viva-summary").classList.add("hidden");
+    beginViva();
+    return;
+  }
+  viva.mode = target;
+  $$("#viva-mode .seg-opt").forEach(x => x.classList.toggle("active", x.dataset.mode === target));
 }));
 
 function resetVivaStage() {
@@ -356,6 +433,7 @@ async function beginViva() {
     const d = await postJSON("/viva/start", {
       session_id: state.sessionId, video_id: state.videoId,
       mode: viva.mode, register: currentRegister(), language: state.lang,
+      speaker: state.speaker,
     });
     viva.id = d.viva_id;
     if (d.done && !d.concept_id) { showVivaSummary(); return; }
@@ -366,6 +444,9 @@ async function beginViva() {
 }
 
 function renderVivaQuestion(d) {
+  // A question is on screen → the session is live; lock the mode toggle.
+  viva.started = true;
+  setModeLock(true);
   $("#viva-stage").innerHTML = `
     <div class="viva-progress">question ${(d.asked || 0) + 1} of ${d.total || "?"}</div>
     <p class="viva-question">${esc(d.question)}</p>
@@ -397,6 +478,7 @@ async function vivaRecordToggle() {
     fd.append("viva_id", viva.id);
     fd.append("language", state.lang);
     fd.append("register", currentRegister());
+    fd.append("speaker", state.speaker);
     const r = await fetch("/viva/answer", { method: "POST", body: fd });
     const d = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(d.detail || `${r.status}`);
@@ -441,6 +523,9 @@ function renderVivaResult(d) {
 }
 
 async function showVivaSummary() {
+  // Session is over — unlock the mode toggle for the next run.
+  viva.started = false;
+  setModeLock(false);
   try {
     const s = await getJSON(`/viva/${viva.id}/summary`);
     $("#viva-stage").innerHTML = "";
@@ -472,6 +557,11 @@ async function init() {
     LIBRARY = [];
   }
   renderChips();
+  renderLangs();
+  renderSpeakers();
+  // Viva-scoped copies of the language + voice controls (same shared state).
+  renderLangs("viva-lang");
+  renderSpeakers("viva-voice-trigger", "viva-voice-menu", "viva-voice-current");
   // Deep link: ?url=<youtube> or ?v=<videoId> auto-opens that lecture (shareable,
   // and lets a reviewer land straight in a loaded surface).
   const p = new URLSearchParams(location.search);

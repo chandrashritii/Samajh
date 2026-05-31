@@ -80,9 +80,17 @@ def has_cached_index(video_id: str) -> bool:
     return fi.exists() and fc.exists() and fm.exists()
 
 
-def build_and_persist(video_id: str, chunks: list[Chunk], meta: dict) -> None:
+def build_and_persist(video_id: str, chunks: list[Chunk], meta: dict,
+                      embed_texts: list[str] | None = None) -> None:
+    """Build + persist the FAISS index and chunk store.
+
+    `embed_texts`, when given, are the strings actually embedded (must align 1:1
+    with `chunks`). This lets a non-English lecture be embedded from English
+    translations for cross-lingual retrieval while `chunks.json` keeps the
+    ORIGINAL text for display/answering. Default embeds the chunks' own text.
+    """
     model = _embedder()
-    texts = [c.text for c in chunks]
+    texts = embed_texts if embed_texts is not None else [c.text for c in chunks]
     embs = model.encode(texts, normalize_embeddings=True, show_progress_bar=False)
     embs = np.asarray(embs, dtype="float32")
     index = faiss.IndexFlatIP(embs.shape[1])

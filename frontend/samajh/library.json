@@ -62,7 +62,7 @@
     "channel": "Physics Wallah",
     "subject": "Physics",
     "lang": "hi",
-    "experimental": true,
+    "experimental": false,
     "suggested_questions": [
       "inertia kya hai?",
       "What is Newton's first law?",
