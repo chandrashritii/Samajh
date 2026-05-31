@@ -129,6 +129,17 @@ class AskVoiceResponse(AskResponse):
     audio: Optional[str] = None  # audio_id; null if synthesis was skipped
 
 
+class SpeakRequest(BaseModel):
+    """On-demand TTS for an already-displayed text answer."""
+    text: str
+    language: str = "en"
+    speaker: Optional[str] = None
+
+
+class SpeakResponse(BaseModel):
+    audio: str  # audio_id, retrievable at GET /audio/{id}
+
+
 # ---- Viva ------------------------------------------------------------------
 
 class VivaMode(str, Enum):

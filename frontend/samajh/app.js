@@ -13,6 +13,10 @@ const STATE_LABEL = { demonstrated: "learned", shaky: "revisit", engaged: "explo
 const STATE_CLASS = { demonstrated: "learned", shaky: "revisit", engaged: "exploring", unseen: "notyet" };
 const REGISTER_BY_BLEND = ["more_vernacular", "balanced", "more_english"];
 
+// Custom themed speaker icon for the "Hear answer" button (inherits currentColor,
+// so it picks up the manuscript-red accent — no default browser/emoji glyph).
+const SPEAKER_SVG = `<svg class="hear-icon" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 9.2a3.2 3.2 0 0 1 0 5.6"/><path d="M18.6 6.7a6.5 6.5 0 0 1 0 10.6"/></svg>`;
+
 // Answer languages — all with Sarvam translate (Mayura) + voice (Bulbul) support.
 const LANGS = [
   { code: "en", label: "English" },
@@ -152,8 +156,9 @@ async function openLecture(url) {
     await refreshMastery();
     $("#question").focus();
   } catch (e) {
+    console.error("openLecture failed for", url, "→", e);
     status.className = "hero-status error";
-    status.textContent = `Couldn't open that lecture: ${e.message}. Try another link.`;
+    status.textContent = "Could not load this video. Public platforms like YouTube limit transcript access from cloud servers, so some links will only work when you run Samajh locally. Try a lecture from the shelf above.";
   } finally {
     $("#open-btn").disabled = false;
   }
@@ -379,6 +384,15 @@ function fillTurn(turn, data, autoplay = false) {
 
   html += `<p class="answer-body${grounded ? "" : " refused"}">${esc(data.answer)}</p>`;
 
+  // "Hear answer" — on-demand TTS for typed answers (the voice/mic path already
+  // ships audio inline via data.audio). Clicking synthesizes in the current
+  // language/voice and swaps in a themed player.
+  if (!data.audio && data.answer && data.answer.trim()) {
+    html += `<button class="hear-btn" type="button">
+      ${SPEAKER_SVG}<span class="hear-label">Hear answer</span></button>
+      <span class="hear-slot"></span>`;
+  }
+
   if (grounded && data.citations && data.citations.length) {
     html += `<div class="cites">`;
     for (const c of data.citations) {
@@ -394,8 +408,34 @@ function fillTurn(turn, data, autoplay = false) {
     if (e.metaKey || e.ctrlKey || e.shiftKey) return;
     e.preventDefault(); seekTo(Number(a.dataset.start));
   }));
+  const hearBtn = card.querySelector(".hear-btn");
+  if (hearBtn) hearBtn.addEventListener("click", () => hearAnswer(hearBtn, data.answer));
   if (autoplay && data.audio) { const au = card.querySelector(".answer-audio"); au && au.play().catch(() => {}); }
 }
+
+// Synthesize and play a text answer on demand (the "Hear answer" button).
+async function hearAnswer(btn, text) {
+  const slot = btn.nextElementSibling;
+  const orig = btn.innerHTML;
+  btn.disabled = true;
+  btn.classList.add("loading");
+  btn.innerHTML = `<span class="hear-spinner"></span><span class="hear-label">Synthesizing…</span>`;
+  try {
+    const d = await postJSON("/speak", { text, language: state.lang, speaker: state.speaker });
+    if (slot) {
+      slot.innerHTML = `<audio class="answer-audio" controls autoplay src="/audio/${esc(d.audio)}"></audio>`;
+      const au = slot.querySelector("audio");
+      au && au.play().catch(() => {});
+    }
+    btn.remove();
+  } catch (e) {
+    btn.disabled = false;
+    btn.classList.remove("loading");
+    btn.innerHTML = orig;
+    if (slot) slot.textContent = ` couldn't synthesize: ${e.message}`;
+  }
+}
+
 function fillTurnError(turn, msg) {
   const card = turn.querySelector(".answer-card");
   card.className = "answer-card refused";

@@ -19,8 +19,9 @@ from . import (
 from .schemas import (
     AskRequest, AskResponse, AskVoiceResponse, Citation, ConceptMapResponse, Health,
     IngestRequest, LectureMeta, MasteryEntry, MasteryState, MasteryUpdate,
-    MisconceptionBlock, Register, SessionMasteryResponse, VivaAnswerResponse,
-    VivaMode, VivaStartRequest, VivaStartResponse, VivaSummaryResponse, VivaSummaryRow,
+    MisconceptionBlock, Register, SessionMasteryResponse, SpeakRequest, SpeakResponse,
+    VivaAnswerResponse, VivaMode, VivaStartRequest, VivaStartResponse,
+    VivaSummaryResponse, VivaSummaryRow,
 )
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -88,8 +89,17 @@ def ingest_endpoint(req: IngestRequest) -> LectureMeta:
 
     try:
         video_id, segments, source = ingestion.ingest(req.url)
-    except RuntimeError as e:
-        raise HTTPException(status_code=502, detail=f"Ingestion failed: {e}")
+    except Exception as e:
+        # On cloud hosts YouTube blocks datacenter IPs, so yt-dlp/transcript
+        # fetches fail here with a variety of exceptions — log the real cause
+        # and return a single friendly 502 instead of an opaque 500.
+        log.warning("ingest failed for %s: %s", req.url, e, exc_info=True)
+        raise HTTPException(
+            status_code=502,
+            detail=("Could not load this video. Public platforms like YouTube limit "
+                    "transcript access from cloud servers, so some links will only work "
+                    "when you run Samajh locally. Try a lecture from the shelf above."),
+        )
 
     chunks = indexing.chunk_segments(segments)
     if not chunks:
@@ -257,6 +267,24 @@ def get_audio(audio_id: str) -> FileResponse:
     if not p.exists():
         raise HTTPException(status_code=404, detail="Audio not found.")
     return FileResponse(p, media_type="audio/wav")
+
+
+@app.post("/speak", response_model=SpeakResponse)
+def speak(req: SpeakRequest) -> SpeakResponse:
+    """On-demand TTS for an already-shown text answer (the 'Hear answer' button).
+    Kept separate from /ask so typed questions stay fast and only synthesize
+    audio when the learner asks for it. Works in every supported language."""
+    text = (req.text or "").strip()
+    if not text:
+        raise HTTPException(status_code=400, detail="Nothing to speak.")
+    lang = req.language if req.language in config.SUPPORTED_LANGUAGES else "en"
+    try:
+        audio_id = voice.speak_answer(text, lang, speaker=_valid_speaker(req.speaker))
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Speech synthesis failed: {e}")
+    if not audio_id:
+        raise HTTPException(status_code=502, detail="Speech synthesis produced no audio.")
+    return SpeakResponse(audio=audio_id)
 
 
 def _valid_speaker(speaker: Optional[str]) -> Optional[str]:
