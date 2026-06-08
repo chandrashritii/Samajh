@@ -14,7 +14,7 @@ from fastapi.staticfiles import StaticFiles
 
 from . import (
     answering, concept_map, config, indexing, ingestion, mastery, multilingual,
-    retrieval, translation, voice, viva as viva_mod,
+    retrieval, sarvam_client, translation, voice, viva as viva_mod,
 )
 from .schemas import (
     AskRequest, AskResponse, AskVoiceResponse, Citation, ConceptMapResponse, Health,
@@ -26,6 +26,12 @@ from .schemas import (
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("tutor")
+
+# Below this raw-retrieval score, a never-translated Latin-script query is treated
+# as possibly romanized/Hinglish and retried via auto-detect translation. Sits
+# above the 0.25 grounding floor (to catch just-over-floor-but-too-weak Hinglish)
+# and below solid on-topic English (~0.5+, which never triggers a retry).
+_ROMANIZED_RESCUE_CEILING = 0.45
 
 app = FastAPI(title="Samajh", version="0.3.0")
 app.add_middleware(
@@ -184,13 +190,39 @@ def _run_ask(req: AskRequest) -> AskResponse:
         raise HTTPException(status_code=404, detail="Lecture not indexed. Call /ingest first.")
 
     index, chunks, _meta = indexing.load(req.video_id)
-    # Cross-lingual retrieval: for a non-English lecture, embed an English-
-    # translated query (Indic-script only). The original question still drives
-    # answering, so answer language/register behaviour is unchanged.
+    # Cross-lingual: build the best *English* form of the query and use it for both
+    # retrieval AND grounding. prepare_query translates Devanagari/Tamil-script
+    # questions to English; Latin-script (English or romanized) passes through.
+    # The user's chosen answer language is unaffected — the answer is generated in
+    # English then translated downstream.
     embed_q = multilingual.prepare_query(req.question, _meta.get("transcript_lang", "en"))
+    grounding_q = embed_q  # English when translated; the original otherwise
     hits = retrieval.top_k(index, chunks, req.question, k=config.RETRIEVAL_K,
                            embed_text=embed_q)
-    result = answering.answer(req.question, hits)
+    # Romanized/Hinglish rescue: a Latin-script query (e.g. "column picture kya
+    # hota hai?") isn't caught by script-based translation; MiniLM scores it in a
+    # weak band (~0.25–0.40) — sometimes under the floor, sometimes just over it
+    # but too weak for the LLM to ground against. So whenever a never-translated
+    # Latin query lands below this rescue ceiling, auto-detect-translate it to
+    # English, and if that retrieves better, use the English query+hits for
+    # grounding too. Solid English asks (~0.5+) never trigger it; and the translate
+    # passes English through unchanged → no-op, so only genuinely non-English
+    # queries are actually re-retrieved/re-grounded.
+    top = max((h.score for h in hits), default=0.0)
+    if top < _ROMANIZED_RESCUE_CEILING and embed_q == req.question:
+        en_q = multilingual.english_fallback(req.question)
+        if en_q:
+            alt = retrieval.top_k(index, chunks, req.question, k=config.RETRIEVAL_K,
+                                  embed_text=en_q)
+            if max((h.score for h in alt), default=0.0) > top:
+                hits = alt
+                grounding_q = en_q
+    try:
+        result = answering.answer(grounding_q, hits)
+    except Exception as e:  # Sarvam down / model retired / credits / timeout
+        status, detail = sarvam_client.friendly_error(e)
+        log.warning("answering failed: %s", e)
+        raise HTTPException(status_code=status, detail=detail)
 
     # Build citations payload from the hits indices.
     citations: list[Citation] = []
@@ -207,7 +239,7 @@ def _run_ask(req: AskRequest) -> AskResponse:
     concepts = concept_map.load(req.video_id)
     hit_chunk_ids = [h.chunk.idx for h in hits]
     touched = (
-        concept_map.attribute(req.question, hit_chunk_ids, concepts, video_id=req.video_id)
+        concept_map.attribute(grounding_q, hit_chunk_ids, concepts, video_id=req.video_id)
         if concepts else []
     )
 

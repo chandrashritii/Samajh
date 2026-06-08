@@ -162,6 +162,8 @@ def answer(question: str, hits: list[Hit]) -> AnsweringResult:
     # temperature=0.0: a grounding/refusal decision should be deterministic.
     # At 0.1 the borderline "talks-around-it" cases (e.g. backprop deferred to a
     # later video) flipped between grounded and refused across identical runs.
+    # Reasoning is disabled (see sarvam_client), so the whole budget goes to the
+    # JSON answer — 900 is ample for a 2–5 sentence grounded answer + citations.
     raw = llm.get_llm().complete(_SYSTEM, user_prompt, max_tokens=900, temperature=0.0)
     parsed = _parse_json_loose(raw)
 

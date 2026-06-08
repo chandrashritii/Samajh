@@ -18,6 +18,30 @@ class SarvamError(RuntimeError):
     pass
 
 
+def friendly_error(exc: Exception) -> tuple[int, str]:
+    """Map a Sarvam call failure to (http_status, human-readable message).
+
+    POC-grade but specific: a billing problem says "recharge", a retired model
+    says so, a slow model says "try again" — never a bare 500. Each cause maps to
+    its OWN message; we don't, e.g., mislabel a token-truncation as a credit issue.
+    """
+    import requests as _rq
+    if isinstance(exc, (_rq.Timeout,)):
+        return 504, ("The Sarvam model took too long to respond. It may be under "
+                     "load — please try again in a moment.")
+    msg = str(exc).lower()
+    if "deprecated" in msg or "has been deprecated" in msg:
+        return 502, ("The configured Sarvam model is no longer available (it was "
+                     "deprecated). Set SARVAM_CHAT_MODEL to a current model "
+                     "(sarvam-30b or sarvam-105b).")
+    if any(t in msg for t in ("insufficient", "quota", "credit", "payment", "billing",
+                              " 402", " 403", "exhausted")):
+        return 402, "Sarvam model credits expired. Please recharge to continue."
+    if " 429" in msg or "rate limit" in msg or "too many requests" in msg:
+        return 429, "Sarvam is rate-limiting requests right now — please try again shortly."
+    return 502, "The answer service is temporarily unavailable. Please try again."
+
+
 # HTTP statuses that indicate a key-specific problem (not a request problem)
 # and so are worth retrying with a fallback key.
 _KEY_LEVEL_STATUSES = {401, 403, 429}
@@ -75,21 +99,32 @@ def stt_transcribe(audio_path: str, language_code: str = "en-IN",
 
 def chat_complete(messages: list[dict[str, str]], *, model: str | None = None,
                   temperature: float = 0.1, max_tokens: int = 800) -> str:
-    """POST /v1/chat/completions. Returns the assistant text content."""
+    """POST /v1/chat/completions. Returns the assistant text content.
+
+    Current Sarvam chat models (sarvam-30b/105b) are reasoning models: by default
+    they emit a chain-of-thought into a separate message.reasoning_content which
+    we never use but which still burns max_tokens (left on, it spent the whole
+    budget reasoning and returned content=null). Per Sarvam's docs, reasoning is
+    disabled by sending reasoning_effort=null — that gives only the final answer,
+    ~20x fewer completion tokens, and ~3s instead of ~90s responses. Exactly what
+    a grounded JSON-out tutor wants; we don't need the model to "think aloud".
+    """
     url = f"{config.SARVAM_BASE_URL}/v1/chat/completions"
     payload = {
         "model": model or config.SARVAM_CHAT_MODEL,
         "messages": messages,
         "temperature": temperature,
         "max_tokens": max_tokens,
+        "reasoning_effort": None,  # JSON null → reasoning OFF (the string "none" is rejected)
     }
     body_bytes = json.dumps(payload).encode("utf-8")
 
     def do(key: str) -> requests.Response:
+        # Reasoning models are slower than the old sarvam-m; give them headroom.
         return requests.post(
             url,
             headers={"api-subscription-key": key, "Content-Type": "application/json"},
-            data=body_bytes, timeout=60,
+            data=body_bytes, timeout=150,
         )
 
     r = _with_key_retry(do, "Chat")
@@ -97,7 +132,12 @@ def chat_complete(messages: list[dict[str, str]], *, model: str | None = None,
         raise SarvamError(f"Chat {r.status_code}: {r.text[:300]}")
     body = r.json()
     try:
-        return body["choices"][0]["message"]["content"]
+        # Current Sarvam models (sarvam-30b/105b) are reasoning models: the answer
+        # is in message.content and the chain-of-thought in a separate
+        # message.reasoning_content (which we ignore). content can be null if the
+        # token budget was exhausted on reasoning — coerce to "" so the caller
+        # degrades to a graceful refusal/retry instead of a 500.
+        return body["choices"][0]["message"]["content"] or ""
     except (KeyError, IndexError, TypeError) as e:
         raise SarvamError(f"Unexpected chat response shape: {body}") from e
 

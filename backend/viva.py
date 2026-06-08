@@ -130,7 +130,7 @@ def _generate_question(concept: dict, ctx: list[Chunk], mode: str) -> str:
         f"{_fmt_excerpts(ctx)}\n\n"
         'Output JSON: {"question": "..."}'
     )
-    raw = llm.get_llm().complete(system, user, max_tokens=400, temperature=0.2)
+    raw = llm.get_llm().complete(system, user, max_tokens=800, temperature=0.2)
     parsed = _parse_json(raw) or {}
     q = str(parsed.get("question", "")).strip()
     if not q:
@@ -181,7 +181,7 @@ def _evaluate(question: str, transcript: str, ctx: list[Chunk], mode: str) -> di
         f"STUDENT ANSWER (transcribed speech, may have minor STT errors): {transcript}\n\n"
         'Output JSON: {"verdict": "...", "rationale": "...", "citations": [int]}'
     )
-    raw = llm.get_llm().complete(system, user, max_tokens=500, temperature=0.0)
+    raw = llm.get_llm().complete(system, user, max_tokens=900, temperature=0.0)
     parsed = _parse_json(raw) or {}
     verdict = str(parsed.get("verdict", "")).strip().lower()
     if verdict not in ("correct", "partial", "incorrect", "unsupported"):
@@ -205,7 +205,7 @@ def _reexplain(concept: dict, ctx: list[Chunk]) -> str:
         "excerpts. No outside knowledge. Plain prose for reading aloud."
     )
     user = f"CONCEPT: {concept.get('name')}\n{_fmt_excerpts(ctx)}"
-    raw = llm.get_llm().complete(system, user, max_tokens=400, temperature=0.0)
+    raw = llm.get_llm().complete(system, user, max_tokens=800, temperature=0.0)
     txt = _THINK.sub("", raw).strip()
     txt = _FENCE.sub("", txt).strip()
     return txt[:600]

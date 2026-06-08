@@ -149,3 +149,38 @@ def prepare_query(question: str, transcript_lang: str) -> str:
         en = question
     _query_cache[question] = en
     return en
+
+
+# Cache for the romanized/Hinglish refusal-path fallback (separate from the
+# script-based query cache above).
+_fallback_cache: dict[str, str] = {}
+
+
+def english_fallback(question: str) -> str | None:
+    """Translate a Latin-script query to English via Mayura auto-detect.
+
+    Script-based `prepare_query` only catches Devanagari/Tamil; a romanized /
+    Hinglish query like "column picture kya hota hai?" stays in Latin script,
+    embeds raw, and MiniLM scores it just under the floor. This is the refusal-
+    path rescue: auto-detect-translate the query to English so it can be
+    re-retrieved. Returns the English string, or None if translation failed or
+    produced no real change (e.g. the query was already English) — so the caller
+    can skip a pointless re-retrieval. Cached per query.
+    """
+    q = question.strip()
+    if not q:
+        return None
+    cached = _fallback_cache.get(question)
+    if cached is not None:
+        return cached or None
+    try:
+        en = sarvam_client.translate(
+            question[:_TRANSLATE_CAP],
+            source_language_code="auto", target_language_code="en-IN", mode="formal",
+        )
+    except Exception:  # noqa: BLE001
+        en = ""
+    en = (en or "").strip()
+    result = en if (en and en.lower() != q.lower()) else ""
+    _fallback_cache[question] = result
+    return result or None

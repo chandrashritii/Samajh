@@ -28,7 +28,11 @@ def sarvam_api_keys() -> list[str]:
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "sarvam").lower()
 
 SARVAM_BASE_URL = "https://api.sarvam.ai"
-SARVAM_CHAT_MODEL = os.getenv("SARVAM_CHAT_MODEL", "sarvam-m")
+# sarvam-m was deprecated (2026); current models are sarvam-30b / sarvam-105b.
+# These are reasoning models: the answer is in message.content while the chain of
+# thought is in a separate message.reasoning_content (no inline <think>), so they
+# need a slightly larger max_tokens than sarvam-m did.
+SARVAM_CHAT_MODEL = os.getenv("SARVAM_CHAT_MODEL", "sarvam-30b")
 SARVAM_STT_MODEL = os.getenv("SARVAM_STT_MODEL", "saaras:v3")
 SARVAM_TRANSLATE_MODEL = os.getenv("SARVAM_TRANSLATE_MODEL", "mayura:v1")
 SARVAM_TTS_MODEL = os.getenv("SARVAM_TTS_MODEL", "bulbul:v2")
