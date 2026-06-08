@@ -49,14 +49,48 @@ _SYSTEM = (
     "grounded=false and answer in this form: \"This lecture references/discusses "
     "[topic] but doesn't explain [the specific thing asked] — that's not covered "
     "here.\" Do NOT infer or reconstruct the mechanism from adjacent material.\n"
-    "7. If the excerpts DO explicitly contain the answer, answer concisely (2–5 "
-    "sentences) and cite the excerpt numbers used.\n"
+    "7. If the excerpts DO explicitly contain the answer, write 2–5 smooth, "
+    "self-contained sentences in your OWN voice as a tutor explaining the concept "
+    "directly to the student. STYLE (strict):\n"
+    "   - Use NO quotation marks anywhere. Never embed a phrase from the excerpts "
+    "in quotes.\n"
+    "   - Do NOT narrate the source: never write 'the lecture says/describes/states/"
+    "refers to/explains...' or 'this is described as...'. Just explain the idea.\n"
+    "   - Never reproduce the lecturer's raw words or fragments — the excerpts are "
+    "auto-captions and are disfluent (e.g. '-- you see --', 'and I add'). Rewrite "
+    "the meaning in clean, fluent prose.\n"
+    "   - Example — BAD: The lecture describes this as 'a linear combination of the "
+    "columns'.  GOOD: The column picture views a matrix equation as a linear "
+    "combination of the matrix's columns.\n"
+    "   The citation numbers already prove the grounding, so the prose must read as "
+    "a clean explanation, never a transcript. Cite the excerpt numbers used.\n"
     "8. If the excerpts are unrelated to the question, set grounded=false and "
     "answer exactly: \"That isn't covered in this lecture.\"\n"
     "9. Never invent facts, definitions, mechanisms, or examples not in the "
     "excerpts, and never complete a deferred topic from outside knowledge.\n\n"
+    "STYLE (for the 'answer' field when grounded=true): write your own fluent "
+    "explanation with NO quotation marks and no phrases copied from the excerpts. "
+    "Never write 'the lecture describes/says this as ...' or quote the lecturer. If "
+    "a sentence quotes or narrates the source, rewrite it as a direct explanation.\n\n"
     "Output a single JSON object and nothing else.\n"
 )
+
+
+# Sentence boundary + a quoted-fragment detector that ignores apostrophes inside
+# words (contractions/possessives like "network's", "doesn't"): a quote opens
+# only after whitespace/start. Used to strip the trailing "the lecture says
+# '<raw caption fragment>'" sentences sarvam-30b likes to append.
+_SENT_SPLIT = re.compile(r"(?<=[.!?])\s+")
+_QUOTED_FRAG = re.compile(r'(?:(?<=\s)|^)\'[^\']{2,}?\'|"[^"]{2,}?"')
+
+
+def _smooth_answer(text: str) -> str:
+    """Drop sentences that embed a verbatim quoted fragment, leaving the clean
+    paraphrase. Falls back to the original if stripping would gut the answer."""
+    sents = _SENT_SPLIT.split(text.strip())
+    kept = [s for s in sents if not _QUOTED_FRAG.search(s)]
+    cleaned = " ".join(kept).strip()
+    return cleaned if len(cleaned) >= 40 else text
 
 _JSON_SCHEMA_HINT = (
     'Output schema:\n'
@@ -187,6 +221,10 @@ def answer(question: str, hits: list[Hit]) -> AnsweringResult:
         answer_text = config.REFUSAL_EN
         grounded = False
         citations = []
+    else:
+        # Backstop: strip any trailing "the lecture says '<raw caption>'" sentence
+        # the model appends despite the style rules above.
+        answer_text = _smooth_answer(answer_text)
 
     # ---- (A) Misconception, with grounded-correction enforcement ----------
     misc = Misconception()
